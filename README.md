@@ -1,13 +1,18 @@
 # diplomski
 
-Kafka + protokol bufferi umjesto slanja stringom
+Kafka + protocol buffers as an alternative to string messages
 
-### Dokumentacija
+### Docs
 
-- [GitHub repo koji implementira protokol buffere u Kafka komunikaciji](https://github.com/confluentinc/confluent-kafka-python/blob/master/examples/protobuf_producer.py)
-- [Protobuf dokumentacija](https://protobuf.dev/)
+- [GitHub repo with protocol buffers for communication](https://github.com/confluentinc/confluent-kafka-python/blob/master/examples/protobuf_producer.py)
+- [Protobuf docs](https://protobuf.dev/)
 
-# Izvještaj sastanka (2023-11-10)
+
+# Početak rada
+
+
+
+# Meeting with mentor (2023-11-10)
 
 ## Problem / pitanje
 

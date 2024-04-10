@@ -1,373 +1,55 @@
 
 Tutorial:
-  https://www.youtube.com/watch?v=XFqm_ILuhs0&list=PLt1SIbA8guusxiHz9bveV-UHs_biWFegU
+  - How to install Kafka using Docker & Docker Compose in any OS | Windows | MacOS | Linux | JavaTechie
+  - https://www.youtube.com/watch?v=EiMi11slVnY
 
 
 
-Kafka docker:
-- https://hub.docker.com/layers/apache/kafka/3.7.0/images/sha256-3e324d2bd331570676436b24f625e5dcf1facdfbd62efcffabc6b69b1abc13cc
-- or run "docker pull apache/kafka"
+Starting zookeeper and kafka:
+  - docker compose up -d
+Stopping:
+  - docker compose stop
 
+Check if images are installed:
+  - docker images
 
+Check process statuses:
+  - docker ps
 
-Nvm, actually these images are used:
-- confluentinc/cp-kafka
-- confluentinc/cp-zookeeper
 
-Yaml explained:
-- version: '2':
-    This specifies the version of the Docker Compose file format. Version 2 is chosen here for its simplicity and wide compatibility.
-- services:
-    This section defines the services that make up your app. In this case, we have two services: zookeeper and kafka.
-- image:
-    This specifies the Docker image to use for each service. We’re using Confluent’s images for Zookeeper and Kafka.
-- environment:
-    This section allows you to set environment variables, which are then available to the containers at runtime. For example, ZOOKEEPER_CLIENT_PORT: 2181 sets the client port for Zookeeper to 2181.
-- ports:
-    This section maps ports from the host to the container. For example, - 22181:2181 maps port 2181 in the Zookeeper container to port 22181 on the host machine.
-- depends_on:
-    This section defines the order in which services are started. In this case, Kafka depends on Zookeeper, so Zookeeper is started first.
-- KAFKA_ADVERTISED_LISTENERS:
-    This is a comma-separated list of listeners with the listener name and hostname. It allows Kafka to be reachable from outside the Docker network.
-- KAFKA_LISTENER_SECURITY_PROTOCOL_MAP:
-    This maps the listener names to security protocols. This is used when the listeners have different security (SSL, SASL, PLAINTEXT).
-- KAFKA_INTER_BROKER_LISTENER_NAME:
-    This is the listener that the broker uses for communication with other brokers.
-- KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR:
-    This is the replication factor for the offsets topic. As we only have one Kafka broker, we set it to 1.
+Open kafka in terminal (it = integrated terminal):
+  - docker exec -it kafka /bin/sh
+Find kafka binary distribution:
+  - ls -l opt
+Find kafka scripts (eg start kafka, create topic, produce msgs, consume msgs, ...):
+  - ls -l opt/kafka_2.13-2.8.1/bin
 
 
-Start Kafka Server (spin up the containers):
-- docker-compose up -d
 
-Verify that both servers are listening on their respective ports:
-- nc -zv localhost 22181
-- nc -zv localhost 29092
+-------------------
+  Work with Kafka
+-------------------
 
+Open bin:
+  - cd /opt/kafka_2.13-2.8.1/bin
 
+Create topic:
+  - kafka-topics.sh --create --zookeeper zookeeper:2181 --replication-factor 1 --partitions 1 --topic quickstart
+Explanation:
+  - kafka-topics.sh
+      start topics script
+  - --create
+      create topic flag 
+  - --zookeeper zookeeper:2181
+      specify ZooKeeper connection string, which Kafka uses for maintaining config info & providing distributed sync 
+  - --replication-factor 1
+      replication factor is number of copies of each message stored in the cluster 
+  - --partitions 1
+      partitions allow a topic to be parallelized by splitting the data in a topic across multiple brokers 
+  - --topic quickstart 
+      specify name of the topic to be "quickstart"
 
-
-
-
-
-
-
-
-Bing chat logs:
-----------------------------
-You
-How to install kafka on windows using Docker and confluentinc/cp-kafka and cp-zookeeper?
-Copilot
-
-Apache Kafka
-Apache Kafka
-Explore
-Certainly! Let’s set up Apache Kafka on Windows using Docker and the Confluent Platform containers. This will allow you to create a local development environment for Kafka.
-
-Prerequisites:
-Ensure you have Docker installed on your Windows machine.
-Familiarize yourself with Docker Compose, which we’ll use to manage our containers.
-Single-Node Setup: We’ll start with a single-node Kafka broker setup. Here’s how to do it:
-Create a docker-compose.yml file with the following configuration:
-version: '2'
-services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.4
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - 22181:2181
-
-  kafka:
-    image: confluentinc/cp-kafka:7.4.4
-    depends_on:
-      - zookeeper
-    ports:
-      - 29092:29092
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-In this setup:
-The Zookeeper server listens on port 2181 within the container for the Kafka service.
-For any client running on the host, Zookeeper is exposed on port 22181.
-The Kafka service is exposed to host applications through port 29092 but advertised on port 9092 within the container environment.
-Start Kafka Server: Run the following command to spin up the containers:
-docker-compose up -d
-Verify that both servers are listening on their respective ports:
-nc -zv localhost 22181
-nc -zv localhost 29092
-You should see successful connections. Additionally, check the verbose logs while the containers are starting up to ensure the Kafka server is up:
-docker-compose logs kafka | grep -i started
-Look for the log indicating that the Kafka server has started.
-You’re all set! You now have a single-node Kafka setup running on Windows using Docker. Feel free to explore Kafka topics, producers, and consumers.
-Remember that this setup is for local development purposes. For production environments, consider multi-node setups and additional configurations. Enjoy your Kafka journey! 🚀🍌
-
-Learn more about creating single-node and multi-node setups of Apache Kafka in Docker 1.
-
-Learn more
-1
-
-baeldung.com
-2
-
-conduktor.io
-3
-
-conduktor.io
-4
-
-docs.confluent.io
-5
-
-en.wikipedia.org
-
-You
-How to publish and listen a topic? in python
-Copilot
-Certainly! Let’s explore how to publish and listen to a topic using Python with different messaging systems:
-
-Google Cloud Pub/Sub:
-Google Cloud Pub/Sub allows applications to exchange messages reliably, quickly, and asynchronously. Here’s how you can publish and receive messages using Python:
-Python
-
-from google.cloud import pubsub_v1
-
-# Set up your Google Cloud project and topic
-project_id = "your-project-id"
-topic_name = "your-topic-name"
-
-# Initialize the PublisherClient
-publisher = pubsub_v1.PublisherClient()
-topic_path = publisher.topic_path(project_id, topic_name)
-
-# Publish a message
-message = "Hello, Pub/Sub!"
-future = publisher.publish(topic_path, data=message.encode("utf-8"))
-print(f"Published message ID: {future.result()}")
-AI-generated code. Review and use carefully. More info on FAQ.
-Replace "your-project-id" and "your-topic-name" with your actual project ID and topic name. The message variable contains the content you want to publish.
-To receive messages, create a subscriber client and subscribe to the same topic. You can use the SubscriberClient class to consume messages from the subscription.
-MQTT (Message Queuing Telemetry Transport):
-MQTT is a lightweight messaging protocol often used for IoT devices. To publish and listen to messages using Python, you can use the paho-mqtt library:
-Python
-
-import paho.mqtt.client as mqtt
-
-# Set up your MQTT broker details
-broker_address = "mqtt.eclipse.org"
-port = 1883
-topic = "mytopic"
-message = "Hello, MQTT!"
-
-# Initialize the MQTT client
-client = mqtt.Client()
-client.connect(broker_address, port)
-
-# Publish a message
-client.publish(topic, message)
-print(f"Published message: {message}")
-
-# To listen to messages, set up a callback function for on_message
-def on_message(client, userdata, message):
-    print(f"Received message: {message.payload.decode('utf-8')}")
-
-client.on_message = on_message
-client.subscribe(topic)
-client.loop_forever()
-AI-generated code. Review and use carefully. More info on FAQ.
-Replace broker_address, port, topic, and message with your specific MQTT broker details and desired topic.
-AWS SNS (Simple Notification Service):
-If you’re using AWS, you can publish messages to an SNS topic using the boto3 library:
-Python
-
-import boto3
-
-# Set up your AWS credentials and region
-session = boto3.Session(profile_name="your-profile-name")
-sns = session.client("sns")
-
-# Set up your SNS topic ARN
-topic_arn = "arn:aws:sns:us-east-1:123456789012:my-topic"
-
-# Publish a message
-message = "Hello, AWS SNS!"
-response = sns.publish(TopicArn=topic_arn, Message=message)
-print(f"Published message ID: {response['MessageId']}")
-AI-generated code. Review and use carefully. More info on FAQ.
-Replace "your-profile-name" and topic_arn with your actual AWS profile name and topic ARN.
-Remember to install the necessary libraries (google-cloud-pubsub, paho-mqtt, or boto3) using pip install. Choose the messaging system that best fits your use case, and happy publishing and listening! 🚀📬
-
-Learn more
-1
-
-cloud.google.com
-2
-
-abhinnpandey.medium.com
-3
-learnaws.org
-4
-stackoverflow.com
-
-You
-What is single-node kafka broker setup?
-Copilot
-A single-node Kafka broker setup refers to running a standalone Kafka broker on a single machine. This configuration is useful for local development, testing, or learning purposes. Here’s how you can set up a single-node Kafka broker:
-
-Prerequisites:
-Docker: Ensure you have Docker installed on your system.
-Familiarity with Docker Compose, which we’ll use to manage our containers.
-Configuration:
-Create a docker-compose.yml file with the following configuration:
-version: '2'
-services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.4
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - 22181:2181
-
-  kafka:
-    image: confluentinc/cp-kafka:7.4.4
-    depends_on:
-      - zookeeper
-    ports:
-      - 29092:29092
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
-In this setup:
-The Zookeeper server listens on port 2181 within the container for the Kafka service.
-For any client running on the host, Zookeeper is exposed on port 22181.
-The Kafka service is exposed to host applications through port 29092 but advertised on port 9092 within the container environment.
-Starting Kafka Server:
-Run the following command to spin up the containers:
-docker-compose up -d
-
-Verify that both servers are listening on their respective ports:
-nc -zv localhost 22181
-nc -zv localhost 29092
-
-Additionally, check the verbose logs while the containers are starting up to ensure the Kafka server is up:
-docker-compose logs kafka | grep -i started
-
-Look for the log indicating that the Kafka server has started.
-You’re Ready! You now have a single-node Kafka setup running on your local machine using Docker. Feel free to explore Kafka topics, producers, and consumers.
-Remember that this setup is for local development purposes. For production environments, consider multi-node setups and additional configurations. Enjoy your Kafka journey! 🚀🍌
-
-
-You
-What is the difference between zookeeper and kafka containers?
-Copilot
-ZooKeeper and Kafka are both essential components in the world of distributed systems, particularly for managing data streams. Let’s delve into their roles and differences:
-
-ZooKeeper:
-Purpose: ZooKeeper is a centralized service designed for providing distributed coordination and maintaining configuration information.
-Origin: Originally developed by Yahoo in the early 2000s, it started as a Hadoop sub-project.
-Functionality:
-In-Sync View: ZooKeeper provides an in-sync view of the Kafka cluster.
-Management: It manages coordination and synchronization among Kafka brokers.
-Fixing Bugs: ZooKeeper was initially created to streamline big data cluster processes and address issues during the deployment of distributed clusters.
-Use Cases: ZooKeeper is widely used for distributed systems coordination, leader election, and maintaining metadata.
-Relationship with Kafka: While Kafka relies on ZooKeeper for cluster coordination, ZooKeeper itself is not dedicated to handling client connections or managing topic logs.
-Kafka:
-Purpose: Kafka is a distributed event store and streams-processing platform optimized for handling real-time data streams and building data pipelines.
-Origin: Developed by LinkedIn, it was open-sourced in 2011 and later became an Apache top-level project.
-Functionality:
-Broker: Kafka brokers handle connections from clients (producers and consumers) and manage topic logs, partitions, consumer groups, and individual offsets.
-Topics and Partitions: Kafka organizes data into topics, which are further divided into partitions for parallel processing.
-High Throughput: Kafka excels in sheer speed and throughput, allowing multiple consumers to read simultaneously across an entire cluster.
-Use Cases: Kafka is widely used for real-time data streaming, log aggregation, event sourcing, and building data pipelines.
-Relationship with ZooKeeper: Kafka relies on ZooKeeper for maintaining an in-sync view of the cluster, but Kafka itself focuses on data movement and management.
-In summary, Kafka handles the actual connections from clients and manages topic logs, while ZooKeeper provides coordination and synchronization for the Kafka cluster. Together, they form a powerful combination for streaming data needs in various applications 🚀🐘.
-
-Learn more
-1
-
-openlogic.com
-2
-
-stackshare.io
-3
-
-stackoverflow.com
-
-You
-Explain this command:
-docker-compose logs kafka | grep -i started
-Copilot
-Certainly! Let’s break down the command:
-
-docker-compose logs kafka:
-This part of the command uses docker-compose to retrieve the logs of the Kafka container.
-It specifically targets the logs of the service named “kafka” defined in the docker-compose.yml file.
-When you run this part, it will display the logs related to the Kafka service, including startup messages, errors, and other relevant information.
-| grep -i started:
-The vertical bar (|) is a pipe operator that connects the output of the previous command (docker-compose logs kafka) to the next command (grep -i started).
-grep is a Unix utility used for searching and filtering text.
--i flag makes the search case-insensitive.
-started is the search term we’re looking for.
-So, this part filters the logs to show only lines containing the word “started.”
-In summary, the entire command retrieves the Kafka container logs and then filters those logs to display lines related to Kafka startup (i.e., when Kafka has started). It’s useful for checking if Kafka successfully started or identifying any issues during startup. 🚀🐘
-
-Learn more
-1
-
-stackoverflow.com
-2
-
-docs.aws.amazon.com
-3
-
-microsoft.com
-4
-
-github.com
-
-You
-I dont have netcat, what can I use instead of nc?
-Copilot
-
-netcat
-netcat
-Explore
-Certainly! If you don’t have netcat (nc) available, there are alternative tools you can use for similar purposes. Here are a few options:
-
-Wireshark:
-Description: Wireshark is a powerful network protocol analyzer that allows you to capture and interactively browse network traffic.
-Use Case: While Wireshark is primarily used for analyzing network packets, it can also be handy for monitoring connections and understanding network behavior.
-Platform: Available for Windows, Mac, and Linux.
-Free and Open Source.
-Learn more about Wireshark1.
-socat:
-Description: socat (SOcket CAT) is a versatile utility for bidirectional data transfer between independent data channels (files, pipes, devices, sockets, etc.).
-Use Case: It’s a Swiss Army knife for handling various network tasks, including port forwarding and data manipulation.
-Platform: Linux.
-Free and Open Source.
-Learn more about socat1.
-Ettercap:
-Description: Ettercap is a suite for man-in-the-middle attacks on local area networks (LANs). It features live connection sniffing and content filtering.
-Use Case: Useful for network analysis and security testing.
-Platform: Available for Windows, Mac, and Linux.
-Free and Open Source.
-Learn more about Ettercap1.
-pwncat:
-Description: pwncat is a Python tool for creating reverse shells and network connections.
-Use Case: It’s designed for penetration testing and exploitation.
-Platform: Available for Mac and Windows.
-Free and Open Source.
-Learn more about pwncat1.
-Remember to choose the tool that best fits your specific use case. Each of these alternatives has its own strengths and features, so pick the one that aligns with your requirements. Happy networking! 🚀🔍
+TODO:
+  - https://www.youtube.com/watch?v=EiMi11slVnY
+  - continue video from 11:50
 
