@@ -1,5 +1,5 @@
 import sys
-import proj_config
+import helpers.proj_config as proj_config
 from confluent_kafka import Consumer, KafkaError, KafkaException
 
 conf = {
@@ -38,7 +38,8 @@ def basic_consume_loop(consumer, topics):
         # Print out the message
         print('{0}={1}'.format(msg.key(), msg.value()))
   finally:
-    pass
+    # Close down consumer to commit final offsets.
+    consumer.close()
 
 
 
