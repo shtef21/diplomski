@@ -7,8 +7,13 @@ from dateutil.parser import parse as parse_date
 from tqdm import tqdm
 
 
-# Sets up and return mocks (generate and save to JSON if they do not already exist)
-def get_mocks(overwrite_prev=False):
+# Sets up and return mocks (generate and save to JSON if they do not already exist).
+# 
+# kwargs:
+#   overwrite_prev (boolean) - choose if new mocks should be created if old ones exist
+#   show_logs (boolean)
+#
+def get_mocks(**kwargs):
   save_dir = './python_test/mocks'
   users_path = f'{save_dir}/users.json'
   posts_path = f'{save_dir}/posts.json'
@@ -18,7 +23,7 @@ def get_mocks(overwrite_prev=False):
   if os.path.isdir(save_dir) == False:
     os.mkdir(save_dir)
 
-  if overwrite_prev or not os.path.exists(users_path) or not os.path.exists(posts_path):
+  if kwargs.get('overwrite_prev', False) or not os.path.exists(users_path) or not os.path.exists(posts_path):
     if os.path.exists(users_path):
       os.remove(users_path)
     if os.path.exists(posts_path):
@@ -33,6 +38,12 @@ def get_mocks(overwrite_prev=False):
   else:
     user_mocks = read_json(users_path)
     post_mocks = read_json(posts_path)
+
+  if kwargs.get('show_logs', False):
+    users_size_mb = os.path.getsize(users_path) / 1024 / 1024
+    posts_size_mb = os.path.getsize(posts_path) / 1024 / 1024
+    print(f'Read file "{users_path}": {round(users_size_mb, 2)} MB ({len(user_mocks)} rows)')
+    print(f'Read file "{posts_path}": {round(posts_size_mb, 2)} MB ({len(post_mocks)} rows)')
 
   return user_mocks, post_mocks
 
