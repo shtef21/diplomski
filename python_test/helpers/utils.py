@@ -7,13 +7,15 @@ from dateutil.parser import parse as parse_date
 from tqdm import tqdm
 
 
-# Sets up and return mocks (generate and save to JSON if they do not already exist).
-# 
-# kwargs:
-#   overwrite_prev (boolean) - choose if new mocks should be created if old ones exist
-#   show_logs (boolean)
-#
 def get_mocks(**kwargs):
+  """
+  Sets up and return mocks (generate and save to JSON if they do not already exist).
+  
+  kwargs:
+    - overwrite_prev (bool) - choose if new mocks should be created if old ones exist
+    - show_logs (bool)
+  """
+
   save_dir = './python_test/mocks'
   users_path = f'{save_dir}/users.json'
   posts_path = f'{save_dir}/posts.json'
@@ -23,11 +25,9 @@ def get_mocks(**kwargs):
   if os.path.isdir(save_dir) == False:
     os.mkdir(save_dir)
 
-  if kwargs.get('overwrite_prev', False) or not os.path.exists(users_path) or not os.path.exists(posts_path):
-    if os.path.exists(users_path):
-      os.remove(users_path)
-    if os.path.exists(posts_path):
-      os.remove(posts_path)
+  if kwargs.get('overwrite_prev', False) \
+    or not os.path.exists(users_path) \
+    or not os.path.exists(posts_path):
 
     user_mocks, post_mocks = generate_mock_data()
     print('Saving users...')
