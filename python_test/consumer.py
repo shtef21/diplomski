@@ -15,13 +15,18 @@ running = True
 def basic_consume_loop(consumer, topics):
   try:
     consumer.subscribe(topics)
+    print('Consuming started...')
 
     while running:
-      # Wait for a message up to 1 second
-      msg = consumer.poll(timeout=1.0)
+      # Wait for a message up to 5 second
+      print('Polling data (5s timeout)...', end=' ')
+      msg = consumer.poll(timeout=5.0)
 
       if msg is None:
+        print('None found.')
         continue
+      else:
+        print('Data found.')
 
       if msg.error():
         if msg.error().code() == KafkaError._PARTITION_EOF:
