@@ -9,22 +9,37 @@ from .utils import save_json as dipl_save_json, read_json as dipl_read_json
 
 class MockGenerator:
 
-  def __init__(self, show_logs=False):
-    users, posts = get_mocks(overwrite_prev=False, show_logs=show_logs)
+  def __init__(self, overwrite_prev=False, show_logs=False):
+    users, posts = get_mocks(
+      overwrite_prev=overwrite_prev,
+      show_logs=show_logs
+    )
     self.user_iterator = self.__get_user_iterator(users)
     self.post_iterator = self.__post_iterator(posts)
 
-  def get_user(self):
+  def get_single_user(self):
     return next(self.user_iterator)
   
-  def get_post(self):
+  def get_single_post(self):
     return next(self.post_iterator)
   
   def get_many_users(self, count):
-    return [self.get_user() for _ in range(count)]
+    return [self.get_single_user() for _ in range(count)]
   
   def get_many_posts(self, count):
-    return [self.get_post() for _ in range(count)]
+    return [self.get_single_post() for _ in range(count)]
+  
+  def show_some_data(self):
+    print('Example user:')
+    print('\t', self.get_single_user())
+    print('Example post:')
+    print('\t', self.get_single_post())
+    print('Getting 1 million posts...', end='')
+    print(
+      ' Done fetching',
+      len(self.get_many_posts(1000000)),
+      'posts.'
+    )
 
 
   # Internal generator function for users
@@ -108,12 +123,14 @@ def generate_mock_data():
     birthday = rand_datetime(datetime_limit, datetime.now())
     joined_date = datetime.now() + timedelta(days=random.randint(-1000, -3))
     location = f'Location_{random.randint(1, 100)}'
+    is_male = user_id % 2 == 0
 
     social_media_user_mock = {
       'id': user_id,
       'username': f'user_{user_id}',
       'email': f'user_{user_id}@example.com',
       'joined': joined_date.strftime('%Y-%m-%d'),
+      'sex': is_male,
       'location': location,
       'birthday': birthday.strftime('%Y-%m-%d')
     }
