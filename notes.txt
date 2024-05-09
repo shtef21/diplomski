@@ -4,7 +4,7 @@ Tutorial:
   - https://www.youtube.com/watch?v=EiMi11slVnY
 
 
-
+ 
 Starting zookeeper and kafka:
   - docker compose up -d
 Stopping:
