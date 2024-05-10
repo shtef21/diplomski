@@ -6,6 +6,9 @@ from dateutil.parser import parse as parse_date
 def data_to_json(data):
   return json.dumps(data)
 
+def parse_json_str(json_str):
+  return json.loads(json_str)
+
 
 def save_json(data, path):
   with open(path, 'w') as file:

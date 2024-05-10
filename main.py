@@ -46,9 +46,14 @@ def run_consumer():
 
   topics_to_consume = [ proj_config.topic_name ]
   try:
+    # TODO: fix max size
+    # TODO: only look for msgs after consumer was initialized
     consumer = Consumer({
       'bootstrap.servers': proj_config.bootstrap_server,
-      'group.id': proj_config.string_consumer_group_id
+      'group.id': proj_config.string_consumer_group_id,
+      'message.max.bytes': 250_086_277,
+      # 'fetch.message.max.bytes': 250_086_277,
+      # 'fetch.message.max.bytes': 250_086_277,
     })
     consumer.subscribe(topics_to_consume)
     log(f"I'm up!  Listening to {topics_to_consume}...")
@@ -65,17 +70,29 @@ def run_consumer():
       if msg.error():
         if msg.error().code() == KafkaError._PARTITION_EOF:
           # End of partition event
-          log(
-            '%% %s [%d] reached end at offset %d\n' %
-            (msg.topic(), msg.partition(), msg.offset())
-          )
+          log(f'%{msg.topic()} [{msg.partition()}] reached end at offset {msg.offset()}\n')
+
         elif msg.error():
           raise KafkaException(msg.error())
       else:
+        size_kb = len(msg) / 1024
         msg_utf8 = msg.value().decode('utf-8')
-        log(f'Received the following message: {msg_utf8}')
+
         if msg_utf8 == 'stop_consume':
+          log(f'Received stop_consume message.')
           consumer_active = False
+
+        else:
+          data = dipl_utils.parse_json_str(msg_utf8)
+          key_data = [float(val) for val in msg.key().decode('utf-8').split('_')]
+          id = key_data[0]
+          created_timestamp = key_data[1]
+          read_timestamp = time.time()
+          diff = read_timestamp - created_timestamp
+          
+          log(f'Received message batch (id={id}) of size {round(size_kb, 2)}kB in {round(diff, 4)}s')
+          # timer.add_custom_timestamp(created_timestamp, f'create_batch_{id}')
+          # timer.add_custom_timestamp(read_timestamp, f'received_batch_{id}')
 
   finally:
     # Close down consumer to commit final offsets.
@@ -96,24 +113,30 @@ def run_producer():
       log('Failed to deliver message: {0}: {1}'.format(msg, err))
     else:
       # TODO: test out msg.topic()
-      log('Message produced: {1}'.format(msg.key(), msg.value()))
+      log('Message produced: {1}...'.format(msg.key(), msg.value()[:40]))
 
   producer = Producer({
-    'bootstrap.servers': proj_config.bootstrap_server
+    'bootstrap.servers': proj_config.bootstrap_server,
+    'message.max.bytes': 250_086_277,
+    # 'fetch.message.max.bytes': 169_086_277,
   })
   produced_count = 0
   max_produced_count = received_args.produce_count
   log("I'm up! Producing started...")
 
   while produced_count < max_produced_count:
-    data = mocks.get_many_users(10)
+    data = mocks.get_many_users(5000)
     message_batch = Dipl_MessageBatch(data)
 
     message_batch.set_start_timestamp()
     producer.produce(
       topic=proj_config.topic_name,
-      #key=some_key,
-      value=message_batch.to_json(),
+
+      # To avoid unnecessary processing, pass timestamps through msg key
+      key=f'{message_batch.id}_{message_batch.generated_time}',
+      value=message_batch.data_json,
+      # value=message_batch.entire_batch_to_json(),
+
       callback=producer_logger,
     )
     producer.flush()  # produce it synchronously
