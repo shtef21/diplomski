@@ -5,6 +5,7 @@ from confluent_kafka import Consumer, Producer, KafkaError, KafkaException
 from colorama import Fore, Style, Back
 from pprint import pprint
 
+from python_test.producer import Dipl_Producer
 import python_test.helpers.utils as dipl_utils
 from python_test.helpers.mock_generator import MockGenerator
 from python_test.helpers.proj_config import arg_parser
@@ -100,64 +101,31 @@ def run_consumer():
 
 
 
-# Producer handling
-def run_producer():
-  def log(*args, **kwargs):
-    print(
-      Back.BLUE + Fore.WHITE + 'Producer:' + Style.RESET_ALL,
-      *args,
-      **kwargs
-    )
-  def producer_logger(err, msg):
-    if err is not None:
-      log('Failed to deliver message: {0}: {1}'.format(msg, err))
-    else:
-      # TODO: test out msg.topic()
-      log('Message produced: {1}...'.format(msg.key(), msg.value()[:40]))
-
-  producer = Producer({
-    'bootstrap.servers': proj_config.bootstrap_server,
-    'message.max.bytes': 250_086_277,
-    # 'fetch.message.max.bytes': 169_086_277,
-  })
-  produced_count = 0
-  max_produced_count = received_args.produce_count
-  log("I'm up! Producing started...")
-
-  while produced_count < max_produced_count:
-    data = mocks.get_many_users(5000)
-    message_batch = Dipl_MessageBatch(data)
-
-    message_batch.set_start_timestamp()
-    producer.produce(
-      topic=proj_config.topic_name,
-
-      # To avoid unnecessary processing, pass timestamps through msg key
-      key=f'{message_batch.id}_{message_batch.generated_time}',
-      value=message_batch.data_json,
-      # value=message_batch.entire_batch_to_json(),
-
-      callback=producer_logger,
-    )
-    producer.flush()  # produce it synchronously
-    produced_count += 1
-
-    log(f'Produced {produced_count}/{max_produced_count} messages')
-    log('Sleeping for 2.5s ...')
-    time.sleep(2.5)
-
-  producer.produce(
-    topic=proj_config.topic_name,
-    value='stop_consume',
-    callback=producer_logger,
-  )
-  producer.flush()
-
-
 # Start up the producer and/or consumer
 if received_args.is_producer:
   print('Loading producer...')
-  run_producer()
+
+  def on_produced(producer, err, msg):
+    if producer.produced_count > 5:
+      producer.is_active = False
+
+    if err is not None:
+      producer.log('Failed to deliver message: {0}: {1}'.format(msg, err))
+    else:
+      producer.log('Message produced: {1}...'.format(msg.key(), msg.value()[:40]))
+
+  def after_callback(producer):
+    producer.log('Sleeping for 2.5s...')
+    time.sleep(2.5)
+
+  Dipl_Producer(
+    mock_generator=mocks,
+    generate_count=5000,
+    produce_callback=on_produced,
+    after_callback=after_callback
+  ).run()
+
+
 elif received_args.is_consumer:
   print('Loading consumer...')
   run_consumer()
