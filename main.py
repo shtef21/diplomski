@@ -61,30 +61,26 @@ def run_consumer():
 
     consumer_active = True
     while consumer_active:
-      log('Polling data (2s timeout)...')
-      msg = consumer.poll(timeout=2)
+      log('Polling data (30s timeout)...')
+      msg = consumer.poll(timeout=30.0)
 
       if msg is None:
-        log('No data found.')
         continue
 
       if msg.error():
         if msg.error().code() == KafkaError._PARTITION_EOF:
           # End of partition event
           log(f'%{msg.topic()} [{msg.partition()}] reached end at offset {msg.offset()}\n')
-
         elif msg.error():
           raise KafkaException(msg.error())
-      else:
-        size_kb = len(msg) / 1024
-        msg_utf8 = msg.value().decode('utf-8')
 
-        if msg_utf8 == 'stop_consume':
+      else:
+        if msg.key() == b'stop_consume':
           log(f'Received stop_consume message.')
           consumer_active = False
-
         else:
-          data = dipl_utils.parse_json_str(msg_utf8)
+          # data = dipl_utils.parse_json_str(msg_utf8)
+          size_kb = len(msg) / 1024
           key_data = [float(val) for val in msg.key().decode('utf-8').split('_')]
           id = key_data[0]
           created_timestamp = key_data[1]
@@ -106,13 +102,14 @@ if received_args.is_producer:
   print('Loading producer...')
 
   def on_produced(producer, err, msg):
-    if producer.produced_count > 5:
+    if producer.produced_count > received_args.produce_count:
       producer.is_active = False
 
     if err is not None:
       producer.log('Failed to deliver message: {0}: {1}'.format(msg, err))
     else:
-      producer.log('Message produced: {1}...'.format(msg.key(), msg.value()[:40]))
+      msg_stringified = 'null' if not msg.value() else msg.value()[:40]
+      producer.log('Message with key {0} produced: {1}...'.format(msg.key(), msg_stringified))
 
   def after_callback(producer):
     producer.log('Sleeping for 2.5s...')

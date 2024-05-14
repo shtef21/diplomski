@@ -51,13 +51,14 @@ class Dipl_Producer:
         callback=self.on_produce_wrapper,
       )
       producer.flush()  # produce it synchronously
-      produced_count += 1
+      self.produced_count += 1
 
       self.after_callback(self)
 
     producer.produce(
       topic=proj_config.topic_name,
-      value='stop_consume',
-      callback=self.produce_callback,
+      key='stop_consume',
+      value=None,
+      callback=self.on_produce_wrapper,
     )
     producer.flush()
