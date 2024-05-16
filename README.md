@@ -12,7 +12,7 @@ Kafka + protocol buffers as an alternative to string messages
 
 
 
-# Meeting with mentor (2023-11-10)
+# Requirements (from a meeting sent on 2023-11-10)
 
 ## Problem / pitanje
 
