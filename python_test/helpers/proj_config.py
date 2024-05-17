@@ -34,6 +34,20 @@ arg_parser.add_argument(
   help="Number of messages to publish by Kafka producer (default: 10)"
 )
 
+# TODO: start using these params instead of hardcoded:
+arg_parser.add_argument(
+  '--bootstrap-server',
+  dest='bootstrap_server',
+  type=string,
+  help="Bootstrap server which holds Kafka brokers"
+)
+arg_parser.add_argument(
+  '--topic-name',
+  dest='topic_name',
+  type=string,
+  help="Name of the topic to produce to and consume from"
+)
+
 arg_required_group = arg_parser.add_mutually_exclusive_group(required=True)
 arg_required_group.add_argument(
   '--run-producer',
