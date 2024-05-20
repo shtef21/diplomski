@@ -27,16 +27,19 @@ class Dipl_Producer:
 
   def on_produce_wrapper(self, err, msg):
     self.produced_count += 1
+
+    if err is not None:
+      producer.log(f'Failed to deliver message: {msg}: {err}')
+    else:
+      size_kb = len(msg) / 1024
+      producer.log(f'Produced message {msg.key()} of size {round(size_kb, 2)}kB')
+
     self.produce_callback(self, err, msg)
 
 
-  def run(self):
+  def run(self, producer_config):
 
-    producer = Producer({
-      'bootstrap.servers': proj_config.bootstrap_server,
-      'message.max.bytes': 250_086_277,
-      # 'fetch.message.max.bytes': 169_086_277,
-    })
+    producer = Producer(producer_config)
     self.is_active = True
     self.log("I'm up! Producing started...")
 

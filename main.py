@@ -105,22 +105,22 @@ if received_args.is_producer:
     if producer.produced_count > received_args.produce_count:
       producer.is_active = False
 
-    if err is not None:
-      producer.log('Failed to deliver message: {0}: {1}'.format(msg, err))
-    else:
-      msg_stringified = 'null' if not msg.value() else msg.value()[:40]
-      producer.log('Message with key {0} produced: {1}...'.format(msg.key(), msg_stringified))
-
   def after_callback(producer):
     producer.log('Sleeping for 2.5s...')
     time.sleep(2.5)
+
+  producer_config = {
+    'bootstrap.servers': received_args.bootstrap_server,
+    'message.max.bytes': 250_086_277,
+    # 'fetch.message.max.bytes': 169_086_277,
+  }
 
   Dipl_Producer(
     mock_generator=mocks,
     generate_count=5000,
     produce_callback=on_produced,
     after_callback=after_callback
-  ).run()
+  ).run(producer_config)
 
 
 elif received_args.is_consumer:
