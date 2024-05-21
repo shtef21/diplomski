@@ -35,13 +35,15 @@ arg_parser.add_argument(
 arg_parser.add_argument(
   '--bootstrap-server',
   dest='bootstrap_server',
-  type=string,
+  type=str,
+  required=True,
   help='Bootstrap server which holds Kafka brokers'
 )
 arg_parser.add_argument(
   '--topic-name',
   dest='topic_name',
-  type=string,
+  type=str,
+  required=True,
   help='Name of the topic to produce to and consume from'
 )
 

@@ -1,34 +1,61 @@
 
-Tutorial:
+# Tutorial:
   - How to install Kafka using Docker & Docker Compose in any OS | Windows | MacOS | Linux | JavaTechie
   - https://www.youtube.com/watch?v=EiMi11slVnY
 
 
 
-Starting zookeeper and kafka:
+# Starting zookeeper and kafka:
   - docker compose up -d
-Stopping:
+# Stopping:
   - docker compose stop
 
-Check if images are installed:
+# Check if images are installed:
   - docker images
 
-Check process statuses:
+# Check process statuses:
   - docker ps
 
 
-Open kafka in terminal (it = integrated terminal):
+# Open kafka in terminal (it = integrated terminal):
   - docker exec -it kafka /bin/sh
-Find kafka binary distribution:
+# Find kafka binary distribution:
   - ls -l opt
-Find kafka scripts (eg start kafka, create topic, produce msgs, consume msgs, ...):
+# Find kafka scripts (eg start kafka, create topic, produce msgs, consume msgs, ...):
   - ls -l opt/kafka_2.13-2.8.1/bin
 
 
 
--------------------
-  Work with Kafka
--------------------
+# -------------------
+#   Work with Kafka
+# -------------------
+
+
+# Kafka setup (from inside /opt/kafka_2.13-2.8.1)
+```sh
+    # ZooKeeper service
+    bin/zookeeper-server-start.sh config/zookeeper.properties
+
+    # Broker service
+    bin/kafka-server-start.sh config/server.properties
+
+    # Producer
+    bin/kafka-console-producer.sh --topic SOME_TOPIC_NAME --bootstrap-server localhost:9092
+
+    # Consumer
+    bin/kafka-console-consumer.sh --topic SOME_TOPIC_NAME --from-beginning --bootstrap-server localhost:9092
+
+    # Python Producer
+    python3 main.py --run-producer --bootstrap-server localhost:9092 --topic-name SOME_TOPIC_NAME
+
+    # Python Consumer
+    python3 main.py --run-consumer --bootstrap-server localhost:9092 --topic-name SOME_TOPIC_NAME
+```
+
+
+
+
+# Other examples
 
 Open bin:
   - cd /opt/kafka_2.13-2.8.1/bin
@@ -48,10 +75,6 @@ Explanation:
       partitions allow a topic to be parallelized by splitting the data in a topic across multiple brokers 
   - --topic quickstart 
       specify name of the topic to be "quickstart"
-
-TODO:
-  - https://www.youtube.com/watch?v=EiMi11slVnY
-  - continue video from 11:50
 
 
 Consume all messages from topic "some_topic":

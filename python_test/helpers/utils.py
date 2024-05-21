@@ -1,6 +1,6 @@
 import sys
 import json
-from dateutil.parser import parse as parse_date
+#from dateutil.parser import parse as parse_date
 
 
 def data_to_json(data):
