@@ -13,7 +13,6 @@ class Dipl_MessageBatch():
       - self.data_json - data converted to json
       - self.id - integer representing batch ID
       - self.generated_time - timestamp of creation
-      - self.key - produce key of format "{id}_{generated_time}"; used to efficiently send ID and timestamp
   """
 
   # Static counter
@@ -26,4 +25,3 @@ class Dipl_MessageBatch():
     Dipl_MessageBatch.batch_counter += 1
     self.id = Dipl_MessageBatch.batch_counter
     self.generated_time = time.time()
-    self.key = f'{self.id}_{self.generated_time}'

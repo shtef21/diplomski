@@ -1,14 +1,7 @@
 import time
-from confluent_kafka import Consumer, Producer, KafkaError, KafkaException
+from confluent_kafka import Consumer, KafkaError, KafkaException, TIMESTAMP_CREATE_TIME
 from colorama import Fore, Style, Back
-from pprint import pprint
-
-import python_test.helpers.utils as dipl_utils
-from python_test.helpers.mock_generator import MockGenerator
-from python_test.helpers.proj_config import arg_parser
 from python_test.helpers import proj_config
-from python_test.helpers.clock import Dipl_Clock
-from python_test.message import Dipl_MessageBatch
 
 
 class Dipl_Consumer:
@@ -28,32 +21,13 @@ class Dipl_Consumer:
 
 
   def consume_wrapper(self, msg):
-    size_kb = len(msg) / 1024
-    msg_key = msg.key().decode('utf-8') if msg.key() else None
-    id = None
-    created_timestamp = None
     read_timestamp = time.time()
-    consume_duration = None
+    size_kb = len(msg) / 1024
+    id = None if not msg.key() else int(msg.key().decode('utf-8'))
+    ts_type, ts_milliseconds = msg.timestamp()
+    created_timestamp = -1 if ts_type != TIMESTAMP_CREATE_TIME else ts_milliseconds / 1000
+    consume_duration = -1 if ts_type != TIMESTAMP_CREATE_TIME else read_timestamp - created_timestamp
     # data = dipl_utils.parse_json_str(msg_utf8)
-    
-    if msg_key and '_' in msg_key:
-      key_data = msg_key.split('_')
-      id = int(key_data[0])
-      created_timestamp = float(key_data[1])
-      consume_duration = read_timestamp - created_timestamp
-      self.log(
-        f'Received message batch (id={id})',
-        f'of size {round(size_kb, 2)}kB',
-        f'in {round(consume_duration, 4)}s'
-      )
-    else:
-      self.log(
-        f'Received message batch of unknown format.',
-        f'size={round(size_kb, 2)}kB',
-        f'timestamp={read_timestamp}s',
-        f'key={msg_key}',
-        f'value={msg.value()}'
-      )
 
     info = {
       'id': id,
@@ -61,6 +35,7 @@ class Dipl_Consumer:
       'created_timestamp': created_timestamp,
       'received_timestamp': read_timestamp,
       'consume_duration_s': consume_duration,
+      'value': msg.value() if not id else 'TLDR;',
     }
     self.consume_callback(self, info)
 
@@ -81,7 +56,7 @@ class Dipl_Consumer:
       self.log(f"I'm up!  Listening to {topics_to_consume} until exit or b'stop_consume' message.")
 
       self.is_active = True
-      poll_timeout = 30.0
+      poll_timeout = 5.0
 
       while self.is_active:
         self.log(f'Polling data ({poll_timeout}s timeout)...')
@@ -104,8 +79,6 @@ class Dipl_Consumer:
 
           else:
             self.consume_wrapper(msg)
-            # timer.add_custom_timestamp(created_timestamp, f'create_batch_{id}')
-            # timer.add_custom_timestamp(read_timestamp, f'received_batch_{id}')
 
     finally:
       # Close down consumer to commit final offsets.

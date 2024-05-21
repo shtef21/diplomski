@@ -1,18 +1,16 @@
 import time
 from confluent_kafka import Producer
 from colorama import Fore, Style, Back
-
-from python_test.helpers import proj_config
 from python_test.message import Dipl_MessageBatch
 
 
 class Dipl_Producer:
 
-  def __init__(self, mock_generator, generate_count, produce_callback, on_loop_end):
+  def __init__(self, mock_generator, spawn_count, produce_callback, on_loop_end):
     self.is_active = False
     self.mocks = mock_generator
     self.produced_count = 0
-    self.generate_count = generate_count
+    self.spawn_count = spawn_count
     self.produce_callback = produce_callback
     self.on_loop_end = on_loop_end
 
@@ -26,8 +24,6 @@ class Dipl_Producer:
     )
 
   def produce_callback_wrapper(self, err, msg):
-    self.produced_count += 1
-
     if err is not None:
       self.log(f'Failed to deliver message: {msg}: {err}')
     else:
@@ -44,17 +40,17 @@ class Dipl_Producer:
     self.log("I'm up! Producing started...")
 
     while self.is_active:
-      data = self.mocks.get_many_users(self.generate_count)
+      data = self.mocks.get_users(self.spawn_count)
       message_batch = Dipl_MessageBatch(data)
 
       producer.produce(
         topic=topic_name,
-        key=message_batch.key,
+        key=str(message_batch.id),
         value=message_batch.data_json,
         callback=self.produce_callback_wrapper,
       )
-      producer.flush()  # produce it synchronously
       self.produced_count += 1
+      producer.flush()  # produce it synchronously
       self.on_loop_end(self)
 
     self.log("Producer stopped.")
