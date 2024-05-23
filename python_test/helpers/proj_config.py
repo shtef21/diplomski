@@ -9,6 +9,9 @@ protobuf_consumer_group_id = 'protobuf_group'
 default_produce_count = 10
 default_spawn_count = 1000
 
+db_filename = 'sql.db'
+db_tablename = 'measurements'
+
 
 
 # Command line handling

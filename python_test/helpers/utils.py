@@ -10,6 +10,13 @@ def parse_json_str(json_str):
   return json.loads(json_str)
 
 
+def int_to_bytes(num: int):
+  return num.to_bytes(2, 'little')
+
+def bytes_to_int(byte_arr: bytes):
+  return int.from_bytes(byte_arr, 'little')
+
+
 def save_json(data, path):
   with open(path, 'w') as file:
     json.dump(data, file)

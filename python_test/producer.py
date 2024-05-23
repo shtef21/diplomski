@@ -2,17 +2,13 @@ import time
 from confluent_kafka import Producer
 from colorama import Fore, Style, Back
 from python_test.message import Dipl_MessageBatch
+from .helpers.utils import int_to_bytes
 
 
 class Dipl_Producer:
 
-  def __init__(self, mock_generator, spawn_count, produce_callback, on_loop_end):
-    self.is_active = False
-    self.mocks = mock_generator
-    self.produced_count = 0
-    self.spawn_count = spawn_count
-    self.produce_callback = produce_callback
-    self.on_loop_end = on_loop_end
+  def __init__(self):
+    self.produce_queue: list[Dipl_MessageBatch] = []
 
   
   # log function
@@ -23,34 +19,27 @@ class Dipl_Producer:
       **kwargs
     )
 
-  def produce_callback_wrapper(self, err, msg):
-    if err is not None:
-      self.log(f'Failed to deliver message: {msg}: {err}')
-    else:
-      size_kb = len(msg) / 1024
-      self.log(f'Produced message {msg.key()} of size {round(size_kb, 2)}kB')
 
-    self.produce_callback(self, err, msg)
+  def run(self, **kwargs):
 
-
-  def run(self, config, topic_name):
-
-    producer = Producer(config)
-    self.is_active = True
+    producer = Producer(kwargs['config'])
     self.log("I'm up! Producing started...")
 
-    while self.is_active:
-      data = self.mocks.get_users(self.spawn_count)
-      message_batch = Dipl_MessageBatch(data)
-
+    while len(self.produce_queue) > 0:
+      # data = kwargs['mock_generator'].get_users(kwargs['spawn_count'])
+      # message_batch = Dipl_MessageBatch(data)
+      
+      message_batch = self.produce_queue.pop()
       producer.produce(
-        topic=topic_name,
-        key=str(message_batch.id),
-        value=message_batch.data_json,
-        callback=self.produce_callback_wrapper,
+        topic = kwargs['topic_name'],
+        key = int_to_bytes(message_batch.id),
+        value = message_batch.data_json,
+        callback = kwargs['on_produce'],
       )
-      self.produced_count += 1
-      producer.flush()  # produce it synchronously
-      self.on_loop_end(self)
 
-    self.log("Producer stopped.")
+      producer.flush()  # produce it synchronously
+      kwargs['on_loop_end']()
+
+    self.log("Producer.produce_queue is empty. Producer done.")
+
+

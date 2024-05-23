@@ -3,6 +3,7 @@
 
 import time
 
+from python_test.message import Dipl_MessageBatch
 from python_test.producer import Dipl_Producer
 from python_test.consumer import Dipl_Consumer
 from python_test.helpers.mock_generator import MockGenerator
@@ -27,27 +28,47 @@ if received_args.show_logs:
 # Start up the producer and/or consumer
 if received_args.is_producer:
 
-  def on_loop_end(producer):
-    producer.is_active = producer.produced_count < received_args.produce_count
+  prod = Dipl_Producer()
+
+  def on_produce(err, msg):
+    if err is not None:
+      prod.log(f'Failed to deliver message: {msg}: {err}')
+    else:
+      size_kb = len(msg) / 1024
+      prod.log(f'Produced message {msg.key()} of size {round(size_kb, 2)}kB')
+
+  def on_loop_end():
     sleep_duration = 0.5
     time.sleep(sleep_duration)
 
-  producer_config = {
-    'bootstrap.servers': received_args.bootstrap_server,
-    'message.max.bytes': 10_000_000,  # 10 MB should be cca spawn_count=60000, but max seems to be spawn_count=45000
-    # 'message.max.bytes': 975_000,
-    ## 'message.max.bytes': 250_000_000,
-    ### 'fetch.message.max.bytes': 169_086_277,
-  }
+  produce_counter = received_args.produce_count
 
-  Dipl_Producer(
-    mock_generator=mocks,
-    spawn_count=received_args.spawn_count,
-    produce_callback=lambda producer, err, msg: None,
+  prod.produce_queue.append(
+    Dipl_MessageBatch(mocks, received_args.spawn_count)
+  )
+  produce_counter -= 1
+
+  base_spawn_count = 10
+  repetition_count = 1
+  for multiplier in range(50, 1000, 50):
+    for reps in range(repetition_count):
+      prod.produce_queue.append(
+        Dipl_MessageBatch(mocks, multiplier * base_spawn_count)
+      )
+      produce_counter -= 1
+
+  
+  
+  prod.run(
+    config={
+      'bootstrap.servers': received_args.bootstrap_server,
+      # 10 MB should be cca spawn_count=60000,
+      # but max seems to be spawn_count=45000
+      'message.max.bytes': 10_000_000,
+    },
+    topic_name=received_args.topic_name,
+    on_produce = on_produce,
     on_loop_end=on_loop_end,
-  ).run(
-    config=producer_config,
-    topic_name=received_args.topic_name
   )
 
 
