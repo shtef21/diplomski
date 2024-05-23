@@ -2,13 +2,15 @@ import time
 from confluent_kafka import Consumer, KafkaError, KafkaException, TIMESTAMP_CREATE_TIME
 from colorama import Fore, Style, Back
 from python_test.helpers import proj_config
+from python_test.message import Dipl_MessageBatchInfo
 
 
 class Dipl_Consumer:
 
-  def __init__(self, consume_callback):
+  def __init__(self, consume_callback, **kwargs):
     self.is_active = False
     self.consume_callback = consume_callback
+    self.kwargs = kwargs
 
   
   # log function
@@ -21,22 +23,7 @@ class Dipl_Consumer:
 
 
   def consume_wrapper(self, msg):
-    read_timestamp = time.time()
-    size_kb = len(msg) / 1024
-    id = None if not msg.key() else int(msg.key().decode('utf-8'))
-    ts_type, ts_milliseconds = msg.timestamp()
-    created_timestamp = -1 if ts_type != TIMESTAMP_CREATE_TIME else ts_milliseconds / 1000
-    consume_duration = -1 if ts_type != TIMESTAMP_CREATE_TIME else read_timestamp - created_timestamp
-    # data = dipl_utils.parse_json_str(msg_utf8)
-
-    info = {
-      'id': id,
-      'size_kb': size_kb,
-      'created_timestamp': created_timestamp,
-      'received_timestamp': read_timestamp,
-      'consume_duration_s': consume_duration,
-      'value': msg.value() if not id else 'TLDR;',
-    }
+    info = Dipl_MessageBatchInfo(msg)
     self.consume_callback(self, info)
 
 
@@ -59,7 +46,7 @@ class Dipl_Consumer:
       poll_timeout = 5.0
 
       while self.is_active:
-        self.log(f'Polling data ({poll_timeout}s timeout)...')
+        # Await data (5s)
         msg = consumer.poll(timeout=poll_timeout)
 
         if msg is None:

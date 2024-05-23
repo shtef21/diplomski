@@ -37,7 +37,7 @@ arg_parser.add_argument(
   dest='spawn_count',
   type=int,
   default=default_spawn_count,
-  help=f"Number of users to generate for each publish (default: {default_spawn_count})"
+  help=f"Number of users to generate for each publish (default: {default_spawn_count}, max: 6139, default max size: 976.5 kB)"
 )
 
 arg_parser.add_argument(
