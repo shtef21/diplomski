@@ -38,7 +38,7 @@ class Dipl_Producer:
       )
 
       producer.flush()  # produce it synchronously
-      kwargs['on_loop_end']()
+      time.sleep(kwargs['sleep_time'])
 
     self.log("Producer.produce_queue is empty. Producer done.")
 

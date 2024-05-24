@@ -6,8 +6,7 @@ import argparse
 #topic_name = 'diplomski_test_topic'
 string_consumer_group_id = 'strings_group'
 protobuf_consumer_group_id = 'protobuf_group'
-default_produce_count = 10
-default_spawn_count = 1000
+default_sleep_s = 0.5
 
 db_filename = 'sql.db'
 db_tablename = 'measurements'
@@ -27,20 +26,6 @@ arg_parser.add_argument(
   dest='show_logs',
   action='store_true',
   help='If sent, various logs will be shown'
-)
-arg_parser.add_argument(
-  '--produce-count',
-  dest='produce_count',
-  type=int,
-  default=default_produce_count,
-  help=f"Number of messages to publish by Kafka producer (default: {default_produce_count})"
-)
-arg_parser.add_argument(
-  '--spawn-count',
-  dest='spawn_count',
-  type=int,
-  default=default_spawn_count,
-  help=f"Number of users to generate for each publish (default: {default_spawn_count}, max: 6139, default max size: 976.5 kB)"
 )
 
 arg_parser.add_argument(

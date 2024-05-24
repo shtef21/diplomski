@@ -20,6 +20,7 @@ class Dipl_MessageBatch():
 
   def __init__(self, mock_generator, spawn_count):
     data = mock_generator.get_users(spawn_count)
+    self.spawn_count = spawn_count
     self.data_json = data_to_json(data)
 
     Dipl_MessageBatch.batch_counter += 1

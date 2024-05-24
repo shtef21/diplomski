@@ -6,7 +6,7 @@ from tqdm import tqdm
 from .utils import save_json as dipl_save_json, read_json as dipl_read_json
 
 
-class MockGenerator:
+class Dipl_MockGenerator:
 
   def __init__(self, overwrite_prev=False, show_logs=False):
     users = get_mocks(

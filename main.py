@@ -3,11 +3,13 @@
 
 import time
 
+from python_test.helpers.utils import bytes_to_int
 from python_test.message import Dipl_MessageBatch
 from python_test.producer import Dipl_Producer
 from python_test.consumer import Dipl_Consumer
-from python_test.helpers.mock_generator import MockGenerator
-from python_test.helpers.proj_config import arg_parser
+from python_test.helpers.mock_generator import Dipl_MockGenerator
+from python_test.helpers.proj_config import arg_parser, default_sleep_s
+from python_test.test_runner import create_test_run
 
 
 # Setup args
@@ -15,7 +17,7 @@ received_args = arg_parser.parse_args()
 
 
 # Mocked data handling
-mocks = MockGenerator(
+mocks = Dipl_MockGenerator(
   overwrite_prev=received_args.reset_mocks,
   show_logs=received_args.show_logs,
 )
@@ -29,47 +31,66 @@ if received_args.show_logs:
 if received_args.is_producer:
 
   prod = Dipl_Producer()
+  prod_config = {
+      'bootstrap.servers': received_args.bootstrap_server,
+      # 10 MB should be cca spawn_count=60000,
+      # but max seems to be spawn_count=45000
+      'message.max.bytes': 10_000_000,
+    }
 
   def on_produce(err, msg):
     if err is not None:
       prod.log(f'Failed to deliver message: {msg}: {err}')
     else:
       size_kb = len(msg) / 1024
-      prod.log(f'Produced message {msg.key()} of size {round(size_kb, 2)}kB')
+      prod.log(f'Produced message {bytes_to_int(msg.key())} of size {round(size_kb, 2)}kB')
 
-  def on_loop_end():
-    sleep_duration = 0.5
-    time.sleep(sleep_duration)
 
-  produce_counter = received_args.produce_count
-
-  prod.produce_queue.append(
-    Dipl_MessageBatch(mocks, received_args.spawn_count)
-  )
-  produce_counter -= 1
-
-  base_spawn_count = 10
-  repetition_count = 1
-  for multiplier in range(50, 1000, 50):
-    for reps in range(repetition_count):
-      prod.produce_queue.append(
-        Dipl_MessageBatch(mocks, multiplier * base_spawn_count)
-      )
-      produce_counter -= 1
-
-  
-  
+  prod.produce_queue = []
+  for test_case in create_test_run(type='small', mocks=mocks):
+    prod.produce_queue.append(test_case)
+    prod.log(f'Generated {test_case.spawn_count} users.')
   prod.run(
-    config={
-      'bootstrap.servers': received_args.bootstrap_server,
-      # 10 MB should be cca spawn_count=60000,
-      # but max seems to be spawn_count=45000
-      'message.max.bytes': 10_000_000,
-    },
+    config=prod_config,
     topic_name=received_args.topic_name,
-    on_produce = on_produce,
-    on_loop_end=on_loop_end,
+    on_produce=on_produce,
+    sleep_time=default_sleep_s
   )
+
+  prod.produce_queue = []
+  for test_case in create_test_run(type='medium', mocks=mocks):
+    prod.produce_queue.append(test_case)
+    prod.log(f'Generated {test_case.spawn_count} users.')
+  prod.run(
+    config=prod_config,
+    topic_name=received_args.topic_name,
+    on_produce=on_produce,
+    sleep_time=default_sleep_s
+  )
+
+  prod.produce_queue = []
+  for test_case in create_test_run(type='large', mocks=mocks):
+    prod.produce_queue.append(test_case)
+    prod.log(f'Generated {test_case.spawn_count} users.')
+  prod.run(
+    config=prod_config,
+    topic_name=received_args.topic_name,
+    on_produce=on_produce,
+    sleep_time=default_sleep_s
+  )
+
+  ## Too large for now
+  # prod.produce_queue = []
+  # for test_case in create_test_run(type='extra_large', mocks=mocks):
+  #   prod.produce_queue.append(test_case)
+  #   prod.log(f'Generated {test_case.spawn_count} users.')
+  # prod.run(
+  #   config=prod_config,
+  #   topic_name=received_args.topic_name,
+  #   on_produce=on_produce,
+  #   sleep_time=default_sleep_s
+  # )
+  
 
 
 elif received_args.is_consumer:
