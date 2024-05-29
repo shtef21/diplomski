@@ -1,14 +1,21 @@
 import time
 from confluent_kafka import Producer
 from colorama import Fore, Style, Back
-from python_test.message import Dipl_MessageBatch
-from .helpers.utils import int_to_bytes
+from .message import Dipl_MessageBatch
+from ..helpers.proj_config import default_sleep_s
 
 
 class Dipl_Producer:
 
-  def __init__(self):
+  def __init__(self, bootstrap_server, topic_name):
     self.produce_queue: list[Dipl_MessageBatch] = []
+    self.config = {
+      'bootstrap.servers': bootstrap_server,
+      # 10 MB should be cca spawn_count=60000,
+      # but max seems to be spawn_count=45000
+      'message.max.bytes': 10_000_000,
+    }
+    self.topic_name = topic_name
 
   
   # log function
@@ -20,25 +27,23 @@ class Dipl_Producer:
     )
 
 
-  def run(self, **kwargs):
+  def run(self, produce_callback, sleep_amount):
 
-    producer = Producer(kwargs['config'])
+    producer = Producer(self.config)
     self.log("I'm up! Producing started...")
 
     while len(self.produce_queue) > 0:
-      # data = kwargs['mock_generator'].get_users(kwargs['spawn_count'])
-      # message_batch = Dipl_MessageBatch(data)
-      
       message_batch = self.produce_queue.pop()
       producer.produce(
-        topic = kwargs['topic_name'],
-        key = int_to_bytes(message_batch.id),
+        topic = self.topic_name,
+        key = message_batch.id_bytes,
         value = message_batch.data_json,
-        callback = kwargs['on_produce'],
+        callback = produce_callback,
       )
 
       producer.flush()  # produce it synchronously
-      time.sleep(kwargs['sleep_time'])
+      if sleep_amount > 0:
+        time.sleep(default_sleep_s)
 
     self.log("Producer.produce_queue is empty. Producer done.")
 

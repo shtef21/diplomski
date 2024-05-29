@@ -1,8 +1,8 @@
 import time
-from confluent_kafka import Consumer, KafkaError, KafkaException, TIMESTAMP_CREATE_TIME
+from confluent_kafka import Consumer, KafkaError, KafkaException
 from colorama import Fore, Style, Back
-from python_test.helpers import proj_config
-from python_test.message import Dipl_MessageBatchInfo
+from ..helpers import proj_config
+from .message import Dipl_MessageBatchInfo
 
 
 class Dipl_Consumer:
@@ -32,12 +32,13 @@ class Dipl_Consumer:
     topics_to_consume = [ topic_name ]
     try:
       # TODO: fix max size
-      # TODO: only look for msgs after consumer was initialized
       consumer = Consumer({
-      'bootstrap.servers': bootstrap_server,
-      'group.id': proj_config.string_consumer_group_id,
-      'message.max.bytes': 250_000_000,
-      # 'fetch.message.max.bytes': 250_086_277,
+        'bootstrap.servers': bootstrap_server,
+        'group.id': proj_config.string_consumer_group_id,
+        'enable.auto.commit': False,
+        'auto.offset.reset': 'earliest',
+        'message.max.bytes': 250_000_000,
+        # 'fetch.message.max.bytes': 250_086_277,
       })
       consumer.subscribe(topics_to_consume)
       self.log(f"I'm up!  Listening to {topics_to_consume} until exit or b'stop_consume' message.")
@@ -46,7 +47,7 @@ class Dipl_Consumer:
       poll_timeout = 5.0
 
       while self.is_active:
-        # Await data (5s)
+        # Await data for poll_timeout seconds
         msg = consumer.poll(timeout=poll_timeout)
 
         if msg is None:

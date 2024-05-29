@@ -1,6 +1,6 @@
 
 import time
-from .helpers.utils import data_to_json, bytes_to_int
+from ..helpers.utils import data_to_json, int_to_bytes, bytes_to_int
 from confluent_kafka import TIMESTAMP_CREATE_TIME
 
 
@@ -24,7 +24,7 @@ class Dipl_MessageBatch():
     self.data_json = data_to_json(data)
 
     Dipl_MessageBatch.batch_counter += 1
-    self.id = Dipl_MessageBatch.batch_counter
+    self.id_bytes = int_to_bytes(Dipl_MessageBatch.batch_counter)
     self.generated_time = time.time()
 
 
@@ -36,7 +36,7 @@ class Dipl_MessageBatchInfo():
   def __init__(self, kafka_msg):
     self.id = bytes_to_int(kafka_msg.key()) if kafka_msg.key() else None
     self.size_kb = len(kafka_msg) / 1024
-    self.value = 'TLDR;' if self.id else kafka_msg.value()
+    self.value = 'TLDR;' if self.id else kafka_msg.value().decode('utf-8')
     self.has_measurements = False
     self.ts_received = time.time()
     self.ts_created = None

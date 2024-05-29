@@ -4,93 +4,29 @@
 import time
 
 from python_test.helpers.utils import bytes_to_int
-from python_test.message import Dipl_MessageBatch
-from python_test.producer import Dipl_Producer
-from python_test.consumer import Dipl_Consumer
+from python_test.kafka.message import Dipl_MessageBatch
+from python_test.kafka.producer import Dipl_Producer
+from python_test.kafka.consumer import Dipl_Consumer
 from python_test.helpers.mock_generator import Dipl_MockGenerator
 from python_test.helpers.proj_config import arg_parser, default_sleep_s
-from python_test.test_runner import create_test_run
+from python_test.test_runner import create_test_run, run_all_tests
 
 
 # Setup args
 received_args = arg_parser.parse_args()
 
-
 # Mocked data handling
-mocks = Dipl_MockGenerator(
+mock_generator = Dipl_MockGenerator(
   overwrite_prev=received_args.reset_mocks,
   show_logs=received_args.show_logs,
 )
 
-if received_args.show_logs:
-  mocks.show_some_data()
 
-
-
-# Start up the producer and/or consumer
+# Start up the producer or consumer
 if received_args.is_producer:
 
-  prod = Dipl_Producer()
-  prod_config = {
-      'bootstrap.servers': received_args.bootstrap_server,
-      # 10 MB should be cca spawn_count=60000,
-      # but max seems to be spawn_count=45000
-      'message.max.bytes': 10_000_000,
-    }
-
-  def on_produce(err, msg):
-    if err is not None:
-      prod.log(f'Failed to deliver message: {msg}: {err}')
-    else:
-      size_kb = len(msg) / 1024
-      prod.log(f'Produced message {bytes_to_int(msg.key())} of size {round(size_kb, 2)}kB')
-
-
-  prod.produce_queue = []
-  for test_case in create_test_run(type='small', mocks=mocks):
-    prod.produce_queue.append(test_case)
-    prod.log(f'Generated {test_case.spawn_count} users.')
-  prod.run(
-    config=prod_config,
-    topic_name=received_args.topic_name,
-    on_produce=on_produce,
-    sleep_time=default_sleep_s
-  )
-
-  prod.produce_queue = []
-  for test_case in create_test_run(type='medium', mocks=mocks):
-    prod.produce_queue.append(test_case)
-    prod.log(f'Generated {test_case.spawn_count} users.')
-  prod.run(
-    config=prod_config,
-    topic_name=received_args.topic_name,
-    on_produce=on_produce,
-    sleep_time=default_sleep_s
-  )
-
-  prod.produce_queue = []
-  for test_case in create_test_run(type='large', mocks=mocks):
-    prod.produce_queue.append(test_case)
-    prod.log(f'Generated {test_case.spawn_count} users.')
-  prod.run(
-    config=prod_config,
-    topic_name=received_args.topic_name,
-    on_produce=on_produce,
-    sleep_time=default_sleep_s
-  )
-
-  ## Too large for now
-  # prod.produce_queue = []
-  # for test_case in create_test_run(type='extra_large', mocks=mocks):
-  #   prod.produce_queue.append(test_case)
-  #   prod.log(f'Generated {test_case.spawn_count} users.')
-  # prod.run(
-  #   config=prod_config,
-  #   topic_name=received_args.topic_name,
-  #   on_produce=on_produce,
-  #   sleep_time=default_sleep_s
-  # )
-  
+  producer = Dipl_Producer(received_args.bootstrap_server, received_args.topic_name)
+  run_all_tests(producer, mock_generator)
 
 
 elif received_args.is_consumer:
