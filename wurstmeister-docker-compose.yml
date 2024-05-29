@@ -1,0 +1,27 @@
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: armdocker.rnd.ericsson.se/dockerhub-ericsson-remote/wurstmeister/kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_CREATE_TOPICS: "diplomski_test_topic:1:1"
+      # Default max msg is 1MB but this is 10MB for testing purposes
+      # This is actually an anti pattern, and usually the message
+      #   should have been split into several chunks of 1MB at most
+      KAFKA_MESSAGE_MAX_BYTES: 10_000_000
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  schema-registry:
+    image: armdocker.rnd.ericsson.se/dockerhub-ericsson-remote/confluentinc/cp-schema-registry
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
