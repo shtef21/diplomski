@@ -76,23 +76,35 @@ Automatizacija obavještavanja - čim se updejta repo sa protobuf objektima, mo�
 
 
 
-# Starting zookeeper and kafka:
+# Setting up Protobuf
+
+URL for Protobuf compiler: https://protobuf.dev/downloads
+To install:
+- follow url to the Github release
+- download suitable .zip (e.g. windows)
+- unpack it and add it to PATH
+- now you can use the 'protoc' compiler
+
+
+# Working with Docker
+
+## Starting zookeeper and kafka:
   - docker compose up -d
-# Stopping:
+## Stopping:
   - docker compose stop
 
-# Check if images are installed:
+## Check if images are installed:
   - docker images
 
-# Check process statuses:
+## Check process statuses:
   - docker ps
 
 
-# Open kafka in terminal (it = integrated terminal, kafka = name of container image):
+## Open kafka in terminal (it = integrated terminal, kafka = name of container image):
   - docker exec -it kafka /bin/sh
-# Find kafka binary distribution:
+## Find kafka binary distribution:
   - ls -l opt
-# Find kafka scripts (eg start kafka, create topic, produce msgs, consume msgs, ...):
+## Find kafka scripts (eg start kafka, create topic, produce msgs, consume msgs, ...):
   - ls -l opt/kafka_2.13-2.8.1/bin
 
 
@@ -102,7 +114,7 @@ Automatizacija obavještavanja - čim se updejta repo sa protobuf objektima, mo�
 # -------------------
 
 
-# Kafka setup (from inside /opt/kafka_2.13-2.8.1)
+## Kafka setup (from inside /opt/kafka_2.13-2.8.1)
 ```sh
     # ZooKeeper service
     bin/zookeeper-server-start.sh config/zookeeper.properties
@@ -124,7 +136,7 @@ Automatizacija obavještavanja - čim se updejta repo sa protobuf objektima, mo�
 ```
 
 
-# Other examples
+## Other examples
 
 ```sh
   # Create "quickstart-events" topic
