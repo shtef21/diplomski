@@ -55,7 +55,7 @@ def run_all_tests(prod: Dipl_Producer, mock_generator: Dipl_MockGenerator):
     prod.log(f'Generated {test_case.spawn_count} users.')
   prod.run(
     produce_callback=callback,
-    sleep_time=default_sleep_s
+    sleep_amount=default_sleep_s
   )
 
   prod.produce_queue = []
@@ -64,7 +64,7 @@ def run_all_tests(prod: Dipl_Producer, mock_generator: Dipl_MockGenerator):
     prod.log(f'Generated {test_case.spawn_count} users.')
   prod.run(
     produce_callback=callback,
-    sleep_time=default_sleep_s
+    sleep_amount=default_sleep_s
   )
 
   prod.produce_queue = []
@@ -73,7 +73,7 @@ def run_all_tests(prod: Dipl_Producer, mock_generator: Dipl_MockGenerator):
     prod.log(f'Generated {test_case.spawn_count} users.')
   prod.run(
     produce_callback=callback,
-    sleep_time=default_sleep_s
+    sleep_amount=default_sleep_s
   )
 
   prod.produce_queue = []
@@ -82,6 +82,6 @@ def run_all_tests(prod: Dipl_Producer, mock_generator: Dipl_MockGenerator):
     prod.log(f'Generated {test_case.spawn_count} users.')
   prod.run(
     produce_callback=callback,
-    sleep_time=default_sleep_s
+    sleep_amount=default_sleep_s
   )
 
