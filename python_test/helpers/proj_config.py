@@ -32,8 +32,8 @@ arg_parser.add_argument(
   '--bootstrap-server',
   dest='bootstrap_server',
   type=str,
-  required=True,
-  help='Bootstrap server which holds Kafka brokers'
+  default='localhost:9092',
+  help='Bootstrap server which holds Kafka brokers (default=localhost:9092)'
 )
 arg_parser.add_argument(
   '--topic-name',
