@@ -1,5 +1,5 @@
 # Install required libraries:
-#   pip install confluent-kafka colorama tqdm
+#   pip install confluent-kafka protobuf requests colorama tqdm
 
 import time
 

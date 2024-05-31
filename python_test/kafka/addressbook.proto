@@ -1,3 +1,10 @@
+// To compile this file, run this inside the file's directory:
+//   protoc --python_out='./protobuf' addressbook.proto
+
+/*
+    Python proto buffer compiler doesn't generate data access code directly.
+*/
+
 syntax = "proto2";
 
 package tutorial;
@@ -16,7 +23,7 @@ message Person {
 
     message PhoneNumber {
         optional string number = 1;
-        optional PhoneType type = 2 [default = PHONE_TYPE_HOME]
+        optional PhoneType type = 2 [default = PHONE_TYPE_HOME];
     }
 
     repeated PhoneNumber phones = 4;
