@@ -10,10 +10,10 @@ from python_test.kafka.producer import Dipl_Producer
 
 
 def create_test_run(
-    type: str,
-    mock_generator: Dipl_MockGenerator,
-    reps_per_test_case: int = 10
-  ) -> Generator[Dipl_MessageBatch, None, None]:
+  type: str,
+  mock_generator: Dipl_MockGenerator,
+  reps_per_test_case: int
+):
 
   # Publish 1 user in batch
   if type == 'small':
@@ -42,6 +42,8 @@ def create_test_run(
 
 def run_all_tests(prod: Dipl_Producer, mock_generator: Dipl_MockGenerator):
 
+  reps = 10
+
   def callback(err, msg):
     if err is not None:
       prod.log(f'Failed to deliver message: {msg}: {err}')
@@ -50,36 +52,36 @@ def run_all_tests(prod: Dipl_Producer, mock_generator: Dipl_MockGenerator):
       prod.log(f'Produced message {bytes_to_int(msg.key())} of size {round(size_kb, 2)}kB')
 
   prod.produce_queue = []
-  for test_case in create_test_run('small', mock_generator):
+  for test_case in create_test_run('small', mock_generator, reps):
     prod.produce_queue.append(test_case)
-    prod.log(f'Generated {test_case.spawn_count} users.')
+  prod.log(f'Inserted {len(prod.produce_queue)} messages to producer queue.')
   prod.run(
     produce_callback=callback,
     sleep_amount=default_sleep_s
   )
 
   prod.produce_queue = []
-  for test_case in create_test_run('medium', mock_generator):
+  for test_case in create_test_run('medium', mock_generator, reps):
     prod.produce_queue.append(test_case)
-    prod.log(f'Generated {test_case.spawn_count} users.')
+  prod.log(f'Inserted {len(prod.produce_queue)} messages to producer queue.')
   prod.run(
     produce_callback=callback,
     sleep_amount=default_sleep_s
   )
 
   prod.produce_queue = []
-  for test_case in create_test_run('large', mock_generator):
+  for test_case in create_test_run('large', mock_generator, reps):
     prod.produce_queue.append(test_case)
-    prod.log(f'Generated {test_case.spawn_count} users.')
+  prod.log(f'Inserted {len(prod.produce_queue)} messages to producer queue.')
   prod.run(
     produce_callback=callback,
     sleep_amount=default_sleep_s
   )
 
   prod.produce_queue = []
-  for test_case in create_test_run('extra_large', mock_generator):
+  for test_case in create_test_run('extra_large', mock_generator, reps):
     prod.produce_queue.append(test_case)
-    prod.log(f'Generated {test_case.spawn_count} users.')
+  prod.log(f'Inserted {len(prod.produce_queue)} messages to producer queue.')
   prod.run(
     produce_callback=callback,
     sleep_amount=default_sleep_s
