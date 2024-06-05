@@ -1,6 +1,7 @@
 
 import sqlite3
-from typing import Generator
+import matplotlib.pyplot as plt
+import copy
 
 from libs.helpers import db
 from libs.helpers.mock_generator import Dipl_MockGenerator
@@ -111,22 +112,19 @@ def monitor_tests(consumer: Dipl_JsonConsumer):
   print(f'Created table {db_tablename}')
 
   results: list[Dipl_JsonBatchInfo] = []
+  def consume_callback(msg: Dipl_JsonBatchInfo):
+    consumer.log(f'consumed message {msg.id} of size {round(msg.size_kb, 2)}kB')
+    results.append(msg)
   consumer.run(
-    consume_callback=lambda msg: results.append(msg)
+    consume_callback
   )
 
   def insert_results(cursor: sqlite3.Cursor):
     for res in results:
       cursor.execute(f"""
-        INSERT INTO {db_tablename} (
-          user_count,
-          size_kb,
-          ts_created,
-          ts_received,
-          consume_duration,
-          type
-        )
+        INSERT INTO {db_tablename}
         VALUES (
+          {res.id},
           {res.user_count},
           {res.size_kb},
           {res.ts_created},
@@ -137,3 +135,20 @@ def monitor_tests(consumer: Dipl_JsonConsumer):
       """)
   db.operate_on_db(insert_results)
   consumer.log(f'Inserted {len(results)} rows of JSON results.')
+
+
+  # Show results on matplotlib
+  results_sorted = sorted(
+    copy.deepcopy(results),
+    # key=lambda x: x.user_count,
+    key=lambda x: x.id,
+  )
+  x_axis = [res.user_count for res in results_sorted]
+  y_axis = [res.consume_duration for res in results_sorted]
+
+  plt.bar(x_axis, y_axis, color='skyblue', edgecolor='black')
+  plt.xlabel('User count')
+  plt.ylabel('Consume duration')
+  plt.title('User count vs Consume duration')
+
+  plt.show()
