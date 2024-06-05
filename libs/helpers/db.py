@@ -20,7 +20,7 @@ def operate_on_db(what_to_do):
 
   # Handle errors
   except sqlite3.Error as error:
-    print('Error occurred -', error)
+    print('sqlite3.Error occurred -', error)
 
   # Close DB Connection irrespective of success or failure
   finally:

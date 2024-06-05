@@ -1,6 +1,6 @@
 
 import time
-from ...helpers.utils import data_to_json, int_to_bytes, bytes_to_int
+from ...helpers.utils import data_to_json, json_to_data, int_to_bytes, bytes_to_int
 from confluent_kafka import TIMESTAMP_CREATE_TIME
 
 
@@ -34,11 +34,18 @@ class Dipl_JsonBatchInfo():
   def __init__(self, kafka_msg):
     self.id = bytes_to_int(kafka_msg.key()) if kafka_msg.key() else None
     self.size_kb = len(kafka_msg) / 1024
-    self.value = 'TLDR;' if self.id else kafka_msg.value().decode('utf-8')
     self.has_measurements = False
     self.ts_received = time.time()
     self.ts_created = None
     self.consume_duration = None
+
+    if self.id:
+      self.value = 'TLDR;'
+      data = json_to_data(kafka_msg.value().decode('utf-8'))
+      self.user_count = len(data)
+    else:
+      self.value = kafka_msg.value().decode('utf-8')
+      self.user_count = 0
     
     ts_type, ts_milliseconds = kafka_msg.timestamp()
     if ts_type == TIMESTAMP_CREATE_TIME:

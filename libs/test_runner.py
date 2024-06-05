@@ -5,7 +5,7 @@ from typing import Generator
 from libs.helpers import db
 from libs.helpers.mock_generator import Dipl_MockGenerator
 from libs.helpers.utils import bytes_to_int
-from libs.helpers.proj_config import default_sleep_s
+from libs.helpers.proj_config import default_sleep_s, db_tablename
 from libs.kafka.json.consumer import Dipl_JsonConsumer
 from libs.kafka.json.message import Dipl_JsonBatch, Dipl_JsonBatchInfo
 from libs.kafka.json.producer import Dipl_JsonProducer
@@ -39,7 +39,6 @@ def create_test_run(
     for user_count in range(20000, 40001, 5000):
       for reps in range(reps_per_test_case):
         yield Dipl_JsonBatch(mock_generator, user_count)
-
 
 
 def run_all_tests(prod: Dipl_JsonProducer, mock_generator: Dipl_MockGenerator):
@@ -92,11 +91,49 @@ def run_all_tests(prod: Dipl_JsonProducer, mock_generator: Dipl_MockGenerator):
 
 
 def monitor_tests(consumer: Dipl_JsonConsumer):
+
+  print('Started test monitoring')
+
+  def create_table(cursor: sqlite3.Cursor):
+    cursor.execute(f'DROP TABLE IF EXISTS {db_tablename}')
+    cursor.execute(f"""
+      CREATE TABLE {db_tablename} (
+        id INTEGER PRIMARY KEY,
+        user_count INTEGER,
+        size_kb REAL,
+        ts_created REAL,
+        ts_received REAL,
+        consume_duration REAL,
+        type TEXT
+      );
+    """)
+  db.operate_on_db(create_table)
+  print(f'Created table {db_tablename}')
+
   results: list[Dipl_JsonBatchInfo] = []
   consumer.run(
     consume_callback=lambda msg: results.append(msg)
   )
-  db.operate_on_db(db.create_table)
 
-  def insert_results():
-    
+  def insert_results(cursor: sqlite3.Cursor):
+    for res in results:
+      cursor.execute(f"""
+        INSERT INTO {db_tablename} (
+          user_count,
+          size_kb,
+          ts_created,
+          ts_received,
+          consume_duration,
+          type
+        )
+        VALUES (
+          {res.user_count},
+          {res.size_kb},
+          {res.ts_created},
+          {res.ts_received},
+          {res.consume_duration},
+          'json'
+        );
+      """)
+  db.operate_on_db(insert_results)
+  consumer.log(f'Inserted {len(results)} rows of JSON results.')

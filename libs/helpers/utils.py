@@ -6,7 +6,7 @@ import json
 def data_to_json(data):
   return json.dumps(data)
 
-def parse_json_str(json_str):
+def json_to_data(json_str):
   return json.loads(json_str)
 
 
