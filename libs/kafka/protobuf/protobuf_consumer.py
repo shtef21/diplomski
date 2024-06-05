@@ -6,7 +6,7 @@ from confluent_kafka import Consumer
 from confluent_kafka.serialization import SerializationContext, MessageField
 from confluent_kafka.schema_registry.protobuf import ProtobufDeserializer
 
-from protobuf_producer import bootstrap_server, topic
+from protobuf_testing.protobuf_producer import bootstrap_server, topic
 import addressbook_helpers as Pb2_Helpers
 
 

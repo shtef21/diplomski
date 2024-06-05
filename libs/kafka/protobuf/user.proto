@@ -1,0 +1,43 @@
+// To compile this file, run this inside the file's directory:
+//   protoc --python_out=./protobuf addressbook.proto
+
+/*
+    Python proto buffer compiler doesn't generate data access code directly.
+*/
+
+syntax = "proto2";
+
+package diplomski;
+
+/*
+{
+    "id": 1,
+    "username": "user_1",
+    "email": "user_1@example.com",
+    "joined": "2024-05-13",
+    "sex": false,
+    "location": "Location_35",
+    "birthday": "1998-01-19"
+}
+*/
+message User {
+    int32 id = 1;
+    string username = 2;
+    string email = 3;
+    string joined = 4;
+
+    enum Gender {
+        MALE = true,
+        FEMALE = false
+    }
+
+    Gender gender = 5;
+    string location = 6;
+    string birthday = 7;
+}
+
+message UserList {
+    repeated User users = 1;
+}
+
+// TODO: Finish this

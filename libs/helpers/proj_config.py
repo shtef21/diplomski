@@ -56,3 +56,15 @@ arg_required_group.add_argument(
   action='store_true',
   help='If sent, loads up the consumer'
 )
+arg_required_group.add_argument(
+  '--run-proto-producer',
+  dest='is_proto_producer',
+  action='store_true',
+  help='If sent, loads up proto producer'
+)
+arg_required_group.add_argument(
+  '--run-proto-consumer',
+  dest='is_proto_consumer',
+  action='store_true',
+  help='If sent, loads up proto consumer'
+)

@@ -1,5 +1,5 @@
 protobuf_compiler
-python_test/mocks/users.json
-python_test/mocks/posts.json
+libs/mocks/users.json
+libs/mocks/posts.json
 __pycache__
 private-notes.md

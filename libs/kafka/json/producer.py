@@ -2,7 +2,7 @@ import time
 from confluent_kafka import Producer
 from colorama import Fore, Style, Back
 from .message import Dipl_MessageBatch
-from ..helpers.proj_config import default_sleep_s
+from ...helpers.proj_config import default_sleep_s
 
 
 class Dipl_Producer:
