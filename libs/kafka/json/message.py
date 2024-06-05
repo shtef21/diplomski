@@ -1,10 +1,10 @@
 
 import time
-from ..helpers.utils import data_to_json, int_to_bytes, bytes_to_int
+from ...helpers.utils import data_to_json, int_to_bytes, bytes_to_int
 from confluent_kafka import TIMESTAMP_CREATE_TIME
 
 
-class Dipl_MessageBatch():
+class Dipl_JsonBatch():
   """
     Object representing a Kafka message batch.
 
@@ -23,15 +23,13 @@ class Dipl_MessageBatch():
     self.spawn_count = spawn_count
     self.data_json = data_to_json(data)
 
-    Dipl_MessageBatch.batch_counter += 1
-    self.id_bytes = int_to_bytes(Dipl_MessageBatch.batch_counter)
+    Dipl_JsonBatch.batch_counter += 1
+    self.id_bytes = int_to_bytes(Dipl_JsonBatch.batch_counter)
     self.generated_time = time.time()
 
 
 
-
-class Dipl_MessageBatchInfo():
-
+class Dipl_JsonBatchInfo():
 
   def __init__(self, kafka_msg):
     self.id = bytes_to_int(kafka_msg.key()) if kafka_msg.key() else None
@@ -43,13 +41,11 @@ class Dipl_MessageBatchInfo():
     self.consume_duration = None
     
     ts_type, ts_milliseconds = kafka_msg.timestamp()
-
     if ts_type == TIMESTAMP_CREATE_TIME:
       self.ts_created = ts_milliseconds / 1000
       self.consume_duration = self.ts_received - self.ts_created
       self.has_measurements = True
     # data = dipl_utils.parse_json_str(msg_utf8)
-
 
   def __repr__(self):
     return self.__dict__.__repr__()

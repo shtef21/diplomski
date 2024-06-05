@@ -3,10 +3,12 @@ import argparse
 
 
 #bootstrap_server = 'localhost:9092'
-#topic_name = 'diplomski_test_topic'
+topic_name_json = 'diplomski_json'
+topic_name_protobuf = 'diplomski_protobuf'
 string_consumer_group_id = 'strings_group'
 protobuf_consumer_group_id = 'protobuf_group'
-default_sleep_s = 0.5
+default_sleep_s = 0.2
+max_msg_size = 10_000_000  # 10 MB
 
 db_filename = 'sql.db'
 db_tablename = 'measurements'
@@ -35,36 +37,31 @@ arg_parser.add_argument(
   default='localhost:9092',
   help='Bootstrap server which holds Kafka brokers (default=localhost:9092)'
 )
-arg_parser.add_argument(
-  '--topic-name',
-  dest='topic_name',
-  type=str,
-  required=True,
-  help='Name of the topic to produce to and consume from'
-)
 
 arg_required_group = arg_parser.add_mutually_exclusive_group(required=True)
 arg_required_group.add_argument(
-  '--run-producer',
+  '--producer',
   dest='is_producer',
   action='store_true',
   help='If sent, loads up the producer'
 )
 arg_required_group.add_argument(
-  '--run-consumer',
+  '--consumer',
   dest='is_consumer',
   action='store_true',
   help='If sent, loads up the consumer'
 )
 arg_required_group.add_argument(
-  '--run-proto-producer',
+  '--run-producer',
   dest='is_proto_producer',
   action='store_true',
   help='If sent, loads up proto producer'
 )
 arg_required_group.add_argument(
-  '--run-proto-consumer',
+  '--run-consumer',
   dest='is_proto_consumer',
   action='store_true',
   help='If sent, loads up proto consumer'
 )
+
+

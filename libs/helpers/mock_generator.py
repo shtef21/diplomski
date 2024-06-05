@@ -49,7 +49,7 @@ def get_mocks(**kwargs):
     - show_logs (bool)
   """
 
-  save_dir = './python_test/mocks'
+  save_dir = './libs/mocks'
   users_path = f'{save_dir}/users.json'
   user_mocks = []
 
@@ -76,7 +76,7 @@ def get_mocks(**kwargs):
 # Generates mock data (without saving it)
 def generate_mock_data():
   user_mocks = []
-  user_num = 1000000
+  user_num = 100_000
   datetime_limit = datetime(1940, 1, 1)
 
   def rand_datetime(start, end):

@@ -1,16 +1,19 @@
 import time
 from confluent_kafka import Consumer, KafkaError, KafkaException
 from colorama import Fore, Style, Back
-from ..helpers import proj_config
-from .message import Dipl_MessageBatchInfo
+from ...helpers.proj_config import string_consumer_group_id, max_msg_size, topic_name_json
+from .message import Dipl_JsonBatchInfo
 
 
-class Dipl_Consumer:
+class Dipl_JsonConsumer:
 
-  def __init__(self, consume_callback, **kwargs):
+  def __init__(self, bootstrap_server):
     self.is_active = False
-    self.consume_callback = consume_callback
-    self.kwargs = kwargs
+    self.config = {
+      'bootstrap.servers': bootstrap_server,
+      'group.id': string_consumer_group_id,
+      'message.max.bytes': max_msg_size,
+    }
 
   
   # log function
@@ -22,29 +25,16 @@ class Dipl_Consumer:
     )
 
 
-  def consume_wrapper(self, msg):
-    info = Dipl_MessageBatchInfo(msg)
-    self.consume_callback(self, info)
+  def run(self, consume_callback):
 
-
-  def run(self, bootstrap_server, topic_name):
-
-    topics_to_consume = [ topic_name ]
+    topics_to_consume = [ topic_name_json ]
     try:
-      # TODO: fix max size
-      consumer = Consumer({
-        'bootstrap.servers': bootstrap_server,
-        'group.id': proj_config.string_consumer_group_id,
-        'enable.auto.commit': False,
-        'auto.offset.reset': 'earliest',
-        'message.max.bytes': 250_000_000,
-        # 'fetch.message.max.bytes': 250_086_277,
-      })
+      consumer = Consumer(self.config)
       consumer.subscribe(topics_to_consume)
-      self.log(f"I'm up!  Listening to {topics_to_consume} until exit or b'stop_consume' message.")
+      self.log(f"I'm up!  Listening to {topics_to_consume}. (^C to exit)")
 
       self.is_active = True
-      poll_timeout = 5.0
+      poll_timeout = 1.0
 
       while self.is_active:
         # Await data for poll_timeout seconds
@@ -53,7 +43,7 @@ class Dipl_Consumer:
         if msg is None:
           continue
 
-        if msg.error():
+        elif msg.error():
           if msg.error().code() == KafkaError._PARTITION_EOF:
             # End of partition event
             self.log(f'%{msg.topic()} [{msg.partition()}] reached end at offset {msg.offset()}\n')
@@ -61,13 +51,12 @@ class Dipl_Consumer:
             raise KafkaException(msg.error())
 
         else:
-          if msg.value() == b'stop_consume':
-            self.log(f'Received stop_consume message.')
-            self.is_active = False
+          info = Dipl_JsonBatchInfo(msg)
+          consume_callback(info)
 
-          else:
-            self.consume_wrapper(msg)
-
+    except KeyboardInterrupt:
+      self.log('^C')
     finally:
       # Close down consumer to commit final offsets.
       consumer.close()
+      self.log("Done consuming.")

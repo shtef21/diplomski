@@ -3,42 +3,32 @@
 
 import time
 
-from python_test.helpers.utils import bytes_to_int
-from python_test.kafka.json.message import Dipl_MessageBatch
-from python_test.kafka.json.producer import Dipl_Producer
-from python_test.kafka.json.consumer import Dipl_Consumer
-from python_test.helpers.mock_generator import Dipl_MockGenerator
-from python_test.helpers.proj_config import arg_parser, default_sleep_s
-from python_test.test_runner import run_all_tests
+from libs.helpers.utils import bytes_to_int
+from libs.kafka.json.message import Dipl_JsonBatch
+from libs.kafka.json.producer import Dipl_JsonProducer
+from libs.kafka.json.consumer import Dipl_JsonConsumer
+from libs.helpers.mock_generator import Dipl_MockGenerator
+from libs.helpers.proj_config import arg_parser, default_sleep_s
+from libs.test_runner import run_all_tests
 
 
 # Setup args
 received_args = arg_parser.parse_args()
 
 # Mocked data handling
-mock_generator = Dipl_MockGenerator(
-  overwrite_prev=received_args.reset_mocks,
-  show_logs=received_args.show_logs,
-)
+mock_generator = Dipl_MockGenerator()
 
 
-# Start up the producer or consumer
+# Start consumer
 if received_args.is_producer:
-  producer = Dipl_Producer(
-    received_args.bootstrap_server,
-    received_args.topic_name
-  )
+  producer = Dipl_JsonProducer(received_args.bootstrap_server)
   run_all_tests(producer, mock_generator)
 
+# Start producer
 elif received_args.is_consumer:
-  def on_consumed(consumer, info):
-    consumer.log(info)
-
-  Dipl_Consumer(
-    consume_callback=on_consumed,
-  ).run(
-    bootstrap_server=received_args.bootstrap_server,
-    topic_name=received_args.topic_name,
+  consumer = Dipl_JsonConsumer(received_args.bootstrap_server)
+  consumer.run(
+    consume_callback=lambda msg_info: consumer.log(msg_info),
   )
 
 
