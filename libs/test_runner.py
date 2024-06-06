@@ -178,3 +178,4 @@ def show_stats():
   plt.title('User count vs Consume duration')
 
   plt.show()
+
