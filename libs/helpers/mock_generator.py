@@ -6,6 +6,19 @@ from tqdm import tqdm
 from .utils import save_json as dipl_save_json, read_json as dipl_read_json
 
 
+# User wrapper that improves linting
+class Dipl_MockedUser:
+  def __init__(self, **kwargs):
+    self.id = kwargs['id']
+    self.username = kwargs['username']
+    self.email = kwargs['email']
+    self.joined = kwargs['joined']
+    self.gender = kwargs['gender']
+    self.location = kwargs['location']
+    self.dob = kwargs['birth_date']
+
+
+
 class Dipl_MockGenerator:
 
   def __init__(self, overwrite_prev=False, show_logs=False):
@@ -15,16 +28,16 @@ class Dipl_MockGenerator:
     )
     self.user_iterator = self.__get_user_iterator(users)
 
-  def get_users(self, count):
+  def get_users(self, count) -> list[Dipl_MockedUser]:
     return [next(self.user_iterator) for _ in range(count)]
   
   def show_some_data(self):
     print('Example user:')
-    print('\t', self.get_single_user())
+    print('\t', self.get_users(1)[0])
     print('Getting 1 million users...', end='')
     print(
       ' Done fetching',
-      len(self.get_many_users(1_000_000)),
+      len(self.get_users(1_000_000)),
       'posts.'
     )
 
@@ -40,7 +53,7 @@ class Dipl_MockGenerator:
         i = 0
 
 
-def get_mocks(**kwargs):
+def get_mocks(**kwargs) -> list[Dipl_MockedUser]:
   """
   Sets up and return mocks (generate and save to JSON if they do not already exist).
   
@@ -70,12 +83,12 @@ def get_mocks(**kwargs):
     users_size_mb = os.path.getsize(users_path) / 1024 / 1024
     print(f'Read file "{users_path}": {round(users_size_mb, 2)} MB ({len(user_mocks)} rows)')
 
-  return user_mocks
+  return [Dipl_MockedUser(u) for u in user_mocks]
 
 
 # Generates mock data (without saving it)
 def generate_mock_data():
-  user_mocks = []
+  user_mocks: list[Dipl_MockedUser] = []
   user_num = 100_000
   datetime_limit = datetime(1940, 1, 1)
 
@@ -92,15 +105,15 @@ def generate_mock_data():
     location = f'Location_{random.randint(1, 100)}'
     is_male = user_id % 2 == 0
 
-    social_media_user_mock = {
+    social_media_user_mock = Dipl_MockedUser({
       'id': user_id,
       'username': f'user_{user_id}',
       'email': f'user_{user_id}@example.com',
       'joined': joined_date.strftime('%Y-%m-%d'),
-      'sex': is_male,
+      'gender': is_male,
       'location': location,
-      'birthday': birthday.strftime('%Y-%m-%d')
-    }
+      'birth_date': birthday.strftime('%Y-%m-%d')
+    })
     user_mocks.append(social_media_user_mock)
 
   return user_mocks
