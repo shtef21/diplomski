@@ -9,7 +9,7 @@ from libs.kafka.json.producer import Dipl_JsonProducer
 from libs.kafka.json.consumer import Dipl_JsonConsumer
 from libs.helpers.mock_generator import Dipl_MockGenerator
 from libs.helpers.proj_config import arg_parser, default_sleep_s
-from libs.test_runner import monitor_tests, run_all_tests
+from libs.test_runner import monitor_tests, run_all_tests, show_results
 
 
 # Setup args
@@ -28,6 +28,10 @@ if received_args.is_producer:
 elif received_args.is_consumer:
   consumer = Dipl_JsonConsumer(received_args.bootstrap_server)
   monitor_tests(consumer)
+
+# Only show results
+elif received_args.is_show_results:
+  show_results()
 
 
 # TODO: Use 'seaborn' for visualizing data (not matplotlib)?

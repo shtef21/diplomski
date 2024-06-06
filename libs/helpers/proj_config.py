@@ -52,16 +52,22 @@ arg_required_group.add_argument(
   help='If sent, loads up the consumer'
 )
 arg_required_group.add_argument(
-  '--run-producer',
+  '--proto-producer',
   dest='is_proto_producer',
   action='store_true',
   help='If sent, loads up proto producer'
 )
 arg_required_group.add_argument(
-  '--run-consumer',
+  '--proto-consumer',
   dest='is_proto_consumer',
   action='store_true',
   help='If sent, loads up proto consumer'
+)
+arg_required_group.add_argument(
+  '--show-results',
+  dest='is_show_results',
+  action='store_true',
+  help='If sent, triggers to only show results'
 )
 
 

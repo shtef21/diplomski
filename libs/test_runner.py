@@ -136,13 +136,27 @@ def monitor_tests(consumer: Dipl_JsonConsumer):
   db.operate_on_db(insert_results)
   consumer.log(f'Inserted {len(results)} rows of JSON results.')
 
+  # Now show the results
 
-  # Show results on matplotlib
-  results_sorted = sorted(
-    copy.deepcopy(results),
-    # key=lambda x: x.user_count,
-    key=lambda x: x.id,
-  )
+
+def show_results():
+
+  results = []
+  def select_data_from_db(cursor: sqlite3.Cursor):
+    query = f"""
+      SELECT
+        user_count,
+        AVG(consume_duration) as avg_consume_duration,
+        COUNT(*) as sample_size
+      FROM {db_tablename}
+      GROUP BY user_count
+    """
+    cursor.execute(query)
+    output = cursor.fetchall()
+    results = output
+  db.operate_on_db(select_data_from_db)
+
+  # Show results
   x_axis = [res.user_count for res in results_sorted]
   y_axis = [res.consume_duration for res in results_sorted]
 
