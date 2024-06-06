@@ -6,7 +6,7 @@ class Dipl_UserPb2_Wrapper:
 
 class Dipl_UserListPb2_Wrapper:
   def __init__(self, u: user_pb2):
-    self.users = 
+    self.users = None and None and None and None
     self.id = u.id
     self.username = u.username
     self.email = u.email
