@@ -8,26 +8,37 @@ from libs.kafka.json.message import Dipl_JsonBatch
 from libs.kafka.json.producer import Dipl_JsonProducer
 from libs.kafka.json.consumer import Dipl_JsonConsumer
 from libs.helpers.mock_generator import Dipl_MockGenerator
-from libs.helpers.proj_config import arg_parser, default_sleep_s
-from libs.test_runner import monitor_tests, run_all_tests
+from libs.helpers.proj_config import ARGS, default_prod_sleep
+from libs.test_runner import monitor_tests, run_all_tests, show_stats
 
-
-# Setup args
-received_args = arg_parser.parse_args()
 
 # Mocked data handling
-mock_generator = Dipl_MockGenerator()
+mock_generator = Dipl_MockGenerator(
+  overwrite_prev=ARGS.reset_mocks,
+  show_logs=ARGS.show_logs
+)
 
 
-# Start consumer
-if received_args.is_producer:
-  producer = Dipl_JsonProducer(received_args.bootstrap_server)
+# Start JSON producer
+if ARGS.is_json_producer:
+  producer = Dipl_JsonProducer(ARGS.bootstrap_server)
   run_all_tests(producer, mock_generator)
 
-# Start producer
-elif received_args.is_consumer:
-  consumer = Dipl_JsonConsumer(received_args.bootstrap_server)
+# Start JSON consumer
+elif ARGS.is_json_consumer:
+  consumer = Dipl_JsonConsumer(ARGS.bootstrap_server)
   monitor_tests(consumer)
 
+# Start proto producer
+elif ARGS.is_proto_producer:
+  pass
+
+# Start proto consumer
+elif ARGS.is_proto_consumer:
+  pass
+
+# Show stats
+elif ARGS.is_stats:
+  show_stats()
 
 # TODO: Use 'seaborn' for visualizing data (not matplotlib)?

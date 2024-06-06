@@ -6,7 +6,7 @@ import copy
 from libs.helpers import db
 from libs.helpers.mock_generator import Dipl_MockGenerator
 from libs.helpers.utils import bytes_to_int
-from libs.helpers.proj_config import default_sleep_s, db_tablename
+from libs.helpers.proj_config import default_prod_sleep, db_tablename
 from libs.kafka.json.consumer import Dipl_JsonConsumer
 from libs.kafka.json.message import Dipl_JsonBatch, Dipl_JsonBatchInfo
 from libs.kafka.json.producer import Dipl_JsonProducer
@@ -59,7 +59,7 @@ def run_all_tests(prod: Dipl_JsonProducer, mock_generator: Dipl_MockGenerator):
   prod.log(f'Inserted {len(prod.produce_queue)} messages to producer queue.')
   prod.run(
     produce_callback=callback,
-    sleep_amount=default_sleep_s
+    sleep_amount=default_prod_sleep
   )
 
   prod.produce_queue = []
@@ -68,7 +68,7 @@ def run_all_tests(prod: Dipl_JsonProducer, mock_generator: Dipl_MockGenerator):
   prod.log(f'Inserted {len(prod.produce_queue)} messages to producer queue.')
   prod.run(
     produce_callback=callback,
-    sleep_amount=default_sleep_s
+    sleep_amount=default_prod_sleep
   )
 
   prod.produce_queue = []
@@ -77,7 +77,7 @@ def run_all_tests(prod: Dipl_JsonProducer, mock_generator: Dipl_MockGenerator):
   prod.log(f'Inserted {len(prod.produce_queue)} messages to producer queue.')
   prod.run(
     produce_callback=callback,
-    sleep_amount=default_sleep_s
+    sleep_amount=default_prod_sleep
   )
 
   prod.produce_queue = []
@@ -86,7 +86,7 @@ def run_all_tests(prod: Dipl_JsonProducer, mock_generator: Dipl_MockGenerator):
   prod.log(f'Inserted {len(prod.produce_queue)} messages to producer queue.')
   prod.run(
     produce_callback=callback,
-    sleep_amount=default_sleep_s
+    sleep_amount=default_prod_sleep
   )
 
 
@@ -137,16 +137,42 @@ def monitor_tests(consumer: Dipl_JsonConsumer):
   consumer.log(f'Inserted {len(results)} rows of JSON results.')
 
 
-  # Show results on matplotlib
-  results_sorted = sorted(
-    copy.deepcopy(results),
-    # key=lambda x: x.user_count,
-    key=lambda x: x.id,
-  )
-  x_axis = [res.user_count for res in results_sorted]
-  y_axis = [res.consume_duration for res in results_sorted]
+def show_stats():
 
-  plt.bar(x_axis, y_axis, color='skyblue', edgecolor='black')
+  results = []
+  def get_results(cursor: sqlite3.Cursor):
+    nonlocal results  # Use parent function results
+    cursor.execute(f"""
+      SELECT
+        user_count,
+        AVG(consume_duration) as cduration_avg,
+        SUM(
+          (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
+          * (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
+        ) / (COUNT(consume_duration)-1)
+        AS cduration_variance
+      FROM {db_tablename}
+      GROUP BY user_count
+    """)
+    results = cursor.fetchall()
+  db.operate_on_db(get_results)
+
+  user_counts = [
+    str(row[0]).replace('0000','0K').replace('000', 'K')
+    for row in results
+  ]
+  y_consume_time = [row[1] for row in results]
+
+  plt.figure(figsize=(10, 6))
+  # plt.bar(user_counts, y_consume_time, color='skyblue', width=0.4)
+
+  # Mock two types of bar charts
+  for i in range(len(user_counts)):
+    if i % 2 == 0:
+      plt.bar(user_counts[i], y_consume_time[i], color='blue', width=0.4)
+    else:
+      plt.bar(user_counts[i], y_consume_time[i], color='maroon', width=0.4)
+
   plt.xlabel('User count')
   plt.ylabel('Consume duration')
   plt.title('User count vs Consume duration')
