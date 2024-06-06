@@ -1,8 +1,8 @@
 import time
 from confluent_kafka import Consumer, KafkaError, KafkaException
 from colorama import Fore, Style, Back
-from ...helpers.proj_config import string_consumer_group_id, max_msg_size, topic_name_json
-from .message import Dipl_JsonBatchInfo
+from ...helpers.proj_config import consumer_group_json, max_msg_size, topic_name_json
+from ..message import Dipl_JsonBatchInfo
 
 
 class Dipl_JsonConsumer:
@@ -11,7 +11,7 @@ class Dipl_JsonConsumer:
     self.is_active = False
     self.config = {
       'bootstrap.servers': bootstrap_server,
-      'group.id': string_consumer_group_id,
+      'group.id': consumer_group_json,
       'message.max.bytes': max_msg_size,
     }
 
@@ -19,7 +19,7 @@ class Dipl_JsonConsumer:
   # log function
   def log(self, *args, **kwargs):
     print(
-      Back.RED + Fore.WHITE + 'Consumer:' + Style.RESET_ALL,
+      Back.RED + Fore.WHITE + 'JConsumer:' + Style.RESET_ALL,
       *args,
       **kwargs
     )

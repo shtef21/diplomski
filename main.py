@@ -4,7 +4,7 @@
 import time
 
 from libs.helpers.utils import bytes_to_int
-from libs.kafka.json.message import Dipl_JsonBatch
+from libs.kafka.message import Dipl_JsonBatch
 from libs.kafka.json.producer import Dipl_JsonProducer
 from libs.kafka.json.consumer import Dipl_JsonConsumer
 from libs.helpers.mock_generator import Dipl_MockGenerator

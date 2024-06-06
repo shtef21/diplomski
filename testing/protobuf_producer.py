@@ -40,8 +40,7 @@ def main():
         }
     )
 
-    # TODO: figure out how to delete a topic from confluentinc broker container
-    # Answer: delete it by removing the created container
+    # Note: delete topic by removing the created container in Docker
     producer_conf = { 'bootstrap.servers': bootstrap_server }
     producer = Producer(producer_conf)
 

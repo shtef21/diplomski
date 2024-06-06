@@ -1,6 +1,6 @@
 
 import time
-from ...helpers.utils import data_to_json, json_to_data, int_to_bytes, bytes_to_int
+from ..helpers.utils import data_to_json, json_to_data, int_to_bytes, bytes_to_int
 from confluent_kafka import TIMESTAMP_CREATE_TIME
 
 

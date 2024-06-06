@@ -1,8 +1,8 @@
 import time
 from confluent_kafka import Producer
 from colorama import Fore, Style, Back
-from .message import Dipl_JsonBatch
-from ...helpers.proj_config import default_sleep_s, topic_name_json
+from ..message import Dipl_JsonBatch
+from ...helpers.proj_config import default_prod_sleep, topic_name_json, max_msg_size
 
 
 class Dipl_JsonProducer:
@@ -11,16 +11,14 @@ class Dipl_JsonProducer:
     self.produce_queue: list[Dipl_JsonBatch] = []
     self.config = {
       'bootstrap.servers': bootstrap_server,
-      # 10 MB should be cca spawn_count=60000,
-      # but max seems to be spawn_count=45000
-      'message.max.bytes': 10_000_000,
+      'message.max.bytes': max_msg_size,  # 10 MB is cca 60K spawn count
     }
 
   
   # log function
   def log(self, *args, **kwargs):
     print(
-      Back.BLUE + Fore.WHITE + 'Producer:' + Style.RESET_ALL,
+      Back.BLUE + Fore.WHITE + 'JProducer:' + Style.RESET_ALL,
       *args,
       **kwargs
     )
@@ -45,7 +43,7 @@ class Dipl_JsonProducer:
         if sleep_amount > 0:
           time.sleep(sleep_amount)
       else:
-        time.sleep(default_sleep_s)
+        time.sleep(default_prod_sleep)
 
     self.log("Done producing.")
 

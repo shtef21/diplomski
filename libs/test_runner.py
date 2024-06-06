@@ -8,7 +8,7 @@ from libs.helpers.mock_generator import Dipl_MockGenerator
 from libs.helpers.utils import bytes_to_int
 from libs.helpers.proj_config import default_prod_sleep, db_tablename
 from libs.kafka.json.consumer import Dipl_JsonConsumer
-from libs.kafka.json.message import Dipl_JsonBatch, Dipl_JsonBatchInfo
+from libs.kafka.message import Dipl_JsonBatch, Dipl_JsonBatchInfo
 from libs.kafka.json.producer import Dipl_JsonProducer
 
 

@@ -1,50 +1,66 @@
 import time
 from confluent_kafka import Producer
 from colorama import Fore, Style, Back
-from .message import Dipl_MessageBatch
-from ...helpers.proj_config import default_sleep_s
+from ..message import Dipl_JsonBatch
+
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.protobuf import ProtobufSerializer
+
+from protoc_out import user_pb2
+
+from ...helpers.proj_config import default_prod_sleep, topic_name_proto, max_msg_size
+from .user_pb2_wrapper import Dipl_UserListPb2_Wrapper
 
 
-class Dipl_Producer:
+def json_batch_to_pb2(batch: Dipl_JsonBatch) -> Dipl_UserListPb2_Wrapper:
+  pass
 
-  def __init__(self, bootstrap_server, topic_name):
-    self.produce_queue: list[Dipl_MessageBatch] = []
+
+class Dipl_JsonProducer:
+
+  def __init__(self, bootstrap_server, schema_registry_url):
+    self.produce_queue: list[Dipl_JsonBatch] = []
     self.config = {
       'bootstrap.servers': bootstrap_server,
-      # 10 MB should be cca spawn_count=60000,
-      # but max seems to be spawn_count=45000
-      'message.max.bytes': 10_000_000,
+      'message.max.bytes': max_msg_size,  # 10 MB is cca 60K spawn count
     }
-    self.topic_name = topic_name
+    sr_client = SchemaRegistryClient({ 'url': schema_registry_url })
+    self.serializer = ProtobufSerializer(
+      msg_type=user_pb2.UserList,
+      schema_registry_client=sr_client
+    )
 
   
   # log function
   def log(self, *args, **kwargs):
     print(
-      Back.BLUE + Fore.WHITE + 'Producer:' + Style.RESET_ALL,
+      Back.LIGHTBLUE_EX + Fore.WHITE + 'PProducer:' + Style.RESET_ALL,
       *args,
       **kwargs
     )
 
 
-  def run(self, produce_callback, sleep_amount):
+  def run(self, produce_callback, sleep_amount=None):
 
     producer = Producer(self.config)
-    self.log("I'm up! Producing started...")
+    self.log(f'Producing {len(self.produce_queue)} messages found in produce_queue...')
 
     while len(self.produce_queue) > 0:
       message_batch = self.produce_queue.pop()
       producer.produce(
-        topic = self.topic_name,
+        topic = topic_name_proto,
         key = message_batch.id_bytes,
         value = message_batch.data_json,
         callback = produce_callback,
       )
 
       producer.flush()  # produce it synchronously
-      if sleep_amount > 0:
-        time.sleep(default_sleep_s)
+      if sleep_amount:
+        if sleep_amount > 0:
+          time.sleep(sleep_amount)
+      else:
+        time.sleep(default_prod_sleep)
 
-    self.log("Producer.produce_queue is empty. Producer done.")
+    self.log("Done producing.")
 
 
