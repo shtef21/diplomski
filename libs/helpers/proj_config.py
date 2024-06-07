@@ -5,7 +5,7 @@ import argparse
 topic_name_json = 'diplomski_json'
 topic_name_proto = 'diplomski_protobuf'
 consumer_group_json = 'strings_group'
-consumer_group_protobuf = 'protobuf_group'
+consumer_group_proto = 'protobuf_group'
 max_msg_size = 10_000_000  # 10 MB
 
 default_bserver = 'localhost:9092'
@@ -30,6 +30,13 @@ class ArgsWraper():
       dest='reset_mocks',
       action='store_true',
       help='If sent, mocked data will be generated even if it already exists'
+    )
+    # reset_db
+    arg_parser.add_argument(
+      '--reset-db',
+      dest='reset_db',
+      action='store_true',
+      help='If sent, DB file will be deleted'
     )
     # show_logs
     arg_parser.add_argument(
@@ -56,12 +63,12 @@ class ArgsWraper():
     )
 
     arg_required_group = arg_parser.add_mutually_exclusive_group(required=True)
-    # is_json_producer
+    # is_produce
     arg_required_group.add_argument(
-      '--json-producer',
-      dest='is_json_producer',
+      '--run-producers',
+      dest='is_produce',
       action='store_true',
-      help='If sent, loads up the producer'
+      help='If sent, loads up producing of JSON and protobuf'
     )
     # is_json_consumer
     arg_required_group.add_argument(
@@ -69,13 +76,6 @@ class ArgsWraper():
       dest='is_json_consumer',
       action='store_true',
       help='If sent, loads up the consumer'
-    )
-    # is_proto_producer
-    arg_required_group.add_argument(
-      '--proto-producer',
-      dest='is_proto_producer',
-      action='store_true',
-      help='If sent, loads up proto producer'
     )
     # is_proto_consumer
     arg_required_group.add_argument(
@@ -95,12 +95,12 @@ class ArgsWraper():
     # Parse and save args to enable linting
     a = arg_parser.parse_args()
     self.reset_mocks = a.reset_mocks
+    self.reset_db = a.reset_db
     self.show_logs = a.show_logs
     self.bootstrap_server = a.bootstrap_server
     self.schema_registry_url = a.schema_registry_url
-    self.is_json_producer = a.is_json_producer
+    self.is_produce = a.is_produce
     self.is_json_consumer = a.is_json_consumer
-    self.is_proto_producer = a.is_proto_producer
     self.is_proto_consumer = a.is_proto_consumer
     self.is_stats = a.is_stats
 

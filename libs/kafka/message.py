@@ -63,8 +63,9 @@ class Dipl_ProtoBatch(Dipl_Batch):
 
 class Dipl_BatchInfo():
 
-  def __init__(self, kafka_msg, type):
+  def __init__(self, kafka_msg, type, user_count):
     self.id = bytes_to_int(kafka_msg.key()) if kafka_msg.key() else None
+    self.user_count = user_count
     self.size_kb = len(kafka_msg) / 1024
     self.has_measurements = False
     self.ts_received = time.time()
@@ -72,14 +73,6 @@ class Dipl_BatchInfo():
     self.consume_duration = None
     self.type = type
 
-    if self.id:
-      self.value = 'TLDR;'
-      data = json_to_data(kafka_msg.value().decode('utf-8'))
-      self.user_count = len(data)
-    else:
-      self.value = kafka_msg.value().decode('utf-8')
-      self.user_count = 0
-    
     ts_type, ts_milliseconds = kafka_msg.timestamp()
     if ts_type == TIMESTAMP_CREATE_TIME:
       self.ts_created = ts_milliseconds / 1000

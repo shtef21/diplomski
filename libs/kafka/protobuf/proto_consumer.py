@@ -1,66 +1,87 @@
-
 import time
+from confluent_kafka import Consumer, KafkaError, KafkaException
+from colorama import Fore, Style, Back
 
-from protobuf import addressbook_pb2
-from confluent_kafka import Consumer
 from confluent_kafka.serialization import SerializationContext, MessageField
 from confluent_kafka.schema_registry.protobuf import ProtobufDeserializer
 
-from protobuf_testing.protobuf_producer import bootstrap_server, topic
-import addressbook_helpers as Pb2_Helpers
+from ...helpers.proj_config import consumer_group_proto, max_msg_size, topic_name_proto
+from ..message import Dipl_BatchInfo
+from .protoc_out import user_pb2
+from .user_pb2_wrapper import Dipl_UserListPb2_Wrapper
 
 
-def produce_callback(err, msg):
-    if err is not None:
-        print(f'Failed to produce Person {msg.key()}: {err}')
-    else:
-        print(f'User {msg.key()} successfully produced: topic={msg.topic()}, partition={msg.partition()}, offset={msg.offset()}')
+class Dipl_ProtoConsumer:
 
-def main():
-    protobuf_deserializer: addressbook_pb2.AddressBook = ProtobufDeserializer(
-        message_type = addressbook_pb2.AddressBook,
-        conf = {
-            'use.deprecated.format': False
-        }
+  def __init__(self, bootstrap_server):
+    self.is_active = False
+    self.config = {
+      'bootstrap.servers': bootstrap_server,
+      'group.id': consumer_group_proto,
+      'message.max.bytes': max_msg_size,
+    }
+    self.deserialize = ProtobufDeserializer(
+      message_type=user_pb2.UserList,
+      conf = {
+        # ProtobufSerializer: the 'use.deprecated.format' configuration property
+        # must be explicitly set due to backward incompatibility with older
+        # confluent-kafka-python Protobuf producers and consumers.
+        # See the release notes for more details.
+        'use.deprecated.format': False,
+      }
     )
 
-    consumer_conf = {
-        'bootstrap.servers': bootstrap_server,
-        'group.id': 'protobuf_group',
-        'auto.offset.reset': 'earliest',
-    }
-    consumer = Consumer(consumer_conf)
-    consumer.subscribe([topic])
+  
+  # log function
+  def log(self, *args, **kwargs):
+    print(
+      Back.LIGHTRED_EX + Fore.WHITE + 'PConsumer:' + Style.RESET_ALL,
+      *args,
+      **kwargs
+    )
 
-    while True:
-        try:
-            msg = consumer.poll(1.0)
-            if msg is None:
-                continue
 
-            #address_book: addressbook_pb2.AddressBook = protobuf_deserializer(...)
+  def run(self, consume_callback):
 
-            # Convert directly from protobuf's default AddressBook to a helper class
-            address_book: Pb2_Helpers.AddressBookWrapper = protobuf_deserializer(
-                msg.value(),
-                SerializationContext(topic, MessageField.VALUE)
+    topics_to_consume = [ topic_name_proto ]
+    try:
+      consumer = Consumer(self.config)
+      consumer.subscribe(topics_to_consume)
+      self.log(f"I'm up!  Listening to {topics_to_consume}. (^C to exit)")
+
+      self.is_active = True
+      poll_timeout = 1.0
+
+      while self.is_active:
+        # Await data for poll_timeout seconds
+        msg = consumer.poll(timeout=poll_timeout)
+
+        if msg is None:
+          continue
+
+        elif msg.error():
+          if msg.error().code() == KafkaError._PARTITION_EOF:
+            # End of partition event
+            self.log(f'%{msg.topic()} [{msg.partition()}] reached end at offset {msg.offset()}\n')
+          else:
+            raise KafkaException(msg.error())
+
+        else:
+          if msg.topic() == topic_name_proto:
+            proto_msg: Dipl_UserListPb2_Wrapper = self.deserialize(
+              msg.value(),
+              SerializationContext(topic_name_proto, MessageField.VALUE)
             )
+            info = Dipl_BatchInfo(msg, 'proto', len(proto_msg.users))
+            consume_callback(info)
+          else:
+            # Only happens if topics_to_consume has many topics
+            self.log(f'Non-standard message received:')
+            self.log(msg.value())
 
-            if address_book is not None:
-                print('-' * 20)
-                print(f'people={len(address_book.people)}')
-                for person in address_book.people:
-                    print(f'  id={person.id} name={person.name} email={person.email} phones={len(person.phones)}')
-                    for phone in person.phones:
-                        print(f'    type={phone.type} num={phone.number}')
-
-        except (KeyboardInterrupt):
-            break
-        except Exception as error:
-            print(f'Error: {error}')
-
-    consumer.close()
-
-
-if __name__ == '__main__':
-    main()
+    except KeyboardInterrupt:
+      self.log('^C')
+    finally:
+      # Close down consumer to commit final offsets.
+      consumer.close()
+      self.log("Done consuming.")

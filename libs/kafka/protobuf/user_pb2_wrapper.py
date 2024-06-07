@@ -13,8 +13,7 @@ class Dipl_UserPb2_Wrapper:
     self.username = u.username
     self.email = u.email
     self.joined = u.joined
-    self.gender = u.gender  # TODO: check what datatype is it (can it be python enum?)
-    # self.gender: Dipl_GenderPb2_Wrapper = u.gender
+    self.gender: Dipl_GenderPb2_Wrapper = Dipl_GenderPb2_Wrapper(u.gender)
     self.location = u.location
     self.birthday = u.birthday
 

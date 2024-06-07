@@ -18,8 +18,8 @@ def produce_callback(err, msg):
 
 def main():
     protobuf_deserializer: addressbook_pb2.AddressBook = ProtobufDeserializer(
-        message_type = addressbook_pb2.AddressBook,
-        conf = {
+        message_type=addressbook_pb2.AddressBook,
+        conf={
             'use.deprecated.format': False
         }
     )
