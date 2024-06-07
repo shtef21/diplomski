@@ -1,12 +1,14 @@
 import sqlite3
-from libs.helpers import proj_config
+
+from libs.kafka.message import Dipl_BatchInfo
+from .proj_config import db_filename, db_tablename
 from pprint import pprint
 
 
-def operate_on_db(what_to_do):
+def __operate_on_db(what_to_do):
   try:
     # Connect to DB and create cursor
-    sqlite_conn = sqlite3.connect(proj_config.db_filename)
+    sqlite_conn = sqlite3.connect(db_filename)
     cursor = sqlite_conn.cursor()
     print('DB initialized.')
 
@@ -29,6 +31,61 @@ def operate_on_db(what_to_do):
       print('SQLite connection closed.')
 
 
+def create_stats_table():
+  def _create_table(cursor: sqlite3.Cursor):
+    cursor.execute(f"""
+      CREATE TABLE IF NOT EXISTS {db_tablename} (
+        id INTEGER PRIMARY KEY,
+        user_count INTEGER,
+        size_kb REAL,
+        ts_created REAL,
+        ts_received REAL,
+        consume_duration REAL,
+        type TEXT
+      );
+    """)
+  __operate_on_db(_create_table)
+
+
+def insert_results(results: list[Dipl_BatchInfo]):
+  def _insert_results(cursor: sqlite3.Cursor):
+    for res in results:
+      cursor.execute(f"""
+        INSERT INTO {db_tablename}
+        VALUES (
+          {res.id},
+          {res.user_count},
+          {res.size_kb},
+          {res.ts_created},
+          {res.ts_received},
+          {res.consume_duration},
+          '{res.type}'
+        );
+      """)
+  __operate_on_db(_insert_results)
+
+
+def select_arr(query) -> list[any]:
+  query_results = []
+  def _get_results(cursor: sqlite3.Cursor):
+    nonlocal query_results
+    cursor.execute(f"""
+      SELECT
+        user_count,
+        AVG(consume_duration) as cduration_avg,
+        SUM(
+          (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
+          * (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
+        ) / (COUNT(consume_duration)-1)
+        AS cduration_variance
+      FROM {db_tablename}
+      GROUP BY user_count
+    """)
+    query_results = cursor.fetchall()
+  __operate_on_db(_get_results)
+  return query_results
+
+
 def show_db_version(cursor: sqlite3.Cursor):
   # Write a query and execute it with cursor
   query = 'select sqlite_version();'
@@ -39,48 +96,6 @@ def show_db_version(cursor: sqlite3.Cursor):
   print(f'> SQLite version is {result[0]}')
 
 
-def create_table(cursor: sqlite3.Cursor):
-  # Drop previous version
-  cursor.execute(f'DROP TABLE IF EXISTS {proj_config.db_tablename}')
-
-  # Create table
-  table_definition = f"""
-    CREATE TABLE {proj_config.db_tablename} (
-      id INTEGER PRIMARY KEY,
-      size_kb REAL,
-      ts_created REAL,
-      ts_received REAL,
-      consume_duration REAL,
-      type TEXT,
-    );
-  """
-  cursor.execute(table_definition)
-  print('> Table is ready')
-
-
-def insert_data_to_db(cursor: sqlite3.Cursor):
-  # Define some data
-  data = [
-    { 'size_kb': 1024, 'ts_received': 1000, 'ts_created': 900, 'consume_duration': 100 }
-    for i in range(1000)
-  ]
-
-  # Create table
-  for el in data:
-    insert_query = f"""
-      INSERT INTO {proj_config.db_tablename}
-        (size_kb, ts_created, ts_received, consume_duration)
-      VALUES (
-        {el['size_kb']},
-        {el['ts_created']},
-        {el['ts_received']},
-        {el['consume_duration']}
-      );
-    """
-    cursor.execute(insert_query)
-  print(f'> Inserted {len(data)} rows into {proj_config.db_tablename}')
-
-
 def select_data_from_db(cursor: sqlite3.Cursor):
   query = f'SELECT * FROM {proj_config.db_tablename}'
   cursor.execute(query)
@@ -89,10 +104,3 @@ def select_data_from_db(cursor: sqlite3.Cursor):
   print('-' * 50)
   pprint(output[:5])
   print('-' * 50)
-
-
-if __name__ == '__main__':
-  operate_on_db(show_db_version)
-  operate_on_db(create_table)
-  operate_on_db(insert_data_to_db)
-  operate_on_db(select_data_from_db)

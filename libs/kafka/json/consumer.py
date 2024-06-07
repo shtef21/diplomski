@@ -2,7 +2,7 @@ import time
 from confluent_kafka import Consumer, KafkaError, KafkaException
 from colorama import Fore, Style, Back
 from ...helpers.proj_config import consumer_group_json, max_msg_size, topic_name_json, topic_name_proto
-from ..message import Dipl_JsonBatchInfo
+from ..message import Dipl_BatchInfo
 
 
 class Dipl_JsonConsumer:
@@ -52,7 +52,7 @@ class Dipl_JsonConsumer:
 
         else:
           if msg.topic() == topic_name_json:
-            info = Dipl_JsonBatchInfo(msg)
+            info = Dipl_BatchInfo(msg, 'json')
             consume_callback(info)
           else:
             # Only happens if topics_to_consume has many topics

@@ -8,7 +8,7 @@ from .helpers.mock_generator import Dipl_MockGenerator
 from .helpers.utils import bytes_to_int
 from .helpers.proj_config import default_prod_sleep, db_tablename
 from .kafka.json.consumer import Dipl_JsonConsumer
-from .kafka.message import Dipl_JsonBatch, Dipl_JsonBatchInfo, Dipl_ProtoBatch
+from .kafka.message import Dipl_JsonBatch, Dipl_BatchInfo, Dipl_ProtoBatch
 from .kafka.json.producer import Dipl_JsonProducer
 from .kafka.protobuf.proto_producer import Dipl_ProtoProducer
 
@@ -97,44 +97,18 @@ def monitor_json_tests(consumer: Dipl_JsonConsumer):
 
   print('Started test monitoring')
 
-  def create_table(cursor: sqlite3.Cursor):
-    cursor.execute(f"""
-      CREATE TABLE IF NOT EXISTS {db_tablename} (
-        id INTEGER PRIMARY KEY,
-        user_count INTEGER,
-        size_kb REAL,
-        ts_created REAL,
-        ts_received REAL,
-        consume_duration REAL,
-        type TEXT
-      );
-    """)
-  db.operate_on_db(create_table)
+  db.create_stats_table()
   print(f'Created table {db_tablename}')
 
-  results: list[Dipl_JsonBatchInfo] = []
-  def consume_callback(msg: Dipl_JsonBatchInfo):
+  results: list[Dipl_BatchInfo] = []
+  def consume_callback(msg: Dipl_BatchInfo):
     consumer.log(f'consumed message {msg.id} of size {round(msg.size_kb, 2)}kB')
     results.append(msg)
   consumer.run(
     consume_callback
   )
 
-  def insert_results(cursor: sqlite3.Cursor):
-    for res in results:
-      cursor.execute(f"""
-        INSERT INTO {db_tablename}
-        VALUES (
-          {res.id},
-          {res.user_count},
-          {res.size_kb},
-          {res.ts_created},
-          {res.ts_received},
-          {res.consume_duration},
-          'json'
-        );
-      """)
-  db.operate_on_db(insert_results)
+  db.insert_results(results)
   consumer.log(f'Inserted {len(results)} rows of JSON results.')
 
 
@@ -162,10 +136,7 @@ def run_proto_tests(prod: Dipl_ProtoProducer, mock_generator: Dipl_MockGenerator
 
 def show_stats():
 
-  results = []
-  def get_results(cursor: sqlite3.Cursor):
-    nonlocal results  # Use parent function results
-    cursor.execute(f"""
+  results = db.select_arr(f"""
       SELECT
         user_count,
         AVG(consume_duration) as cduration_avg,
@@ -177,8 +148,6 @@ def show_stats():
       FROM {db_tablename}
       GROUP BY user_count
     """)
-    results = cursor.fetchall()
-  db.operate_on_db(get_results)
 
   user_counts = [
     str(row[0]).replace('0000','0K').replace('000', 'K')

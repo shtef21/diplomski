@@ -60,15 +60,17 @@ class Dipl_ProtoBatch(Dipl_Batch):
       user.birthday = mocked_user.birth_date
 
 
-class Dipl_JsonBatchInfo():
 
-  def __init__(self, kafka_msg):
+class Dipl_BatchInfo():
+
+  def __init__(self, kafka_msg, type):
     self.id = bytes_to_int(kafka_msg.key()) if kafka_msg.key() else None
     self.size_kb = len(kafka_msg) / 1024
     self.has_measurements = False
     self.ts_received = time.time()
     self.ts_created = None
     self.consume_duration = None
+    self.type = type
 
     if self.id:
       self.value = 'TLDR;'
@@ -83,9 +85,6 @@ class Dipl_JsonBatchInfo():
       self.ts_created = ts_milliseconds / 1000
       self.consume_duration = self.ts_received - self.ts_created
       self.has_measurements = True
-    # data = dipl_utils.parse_json_str(msg_utf8)
 
   def __repr__(self):
     return self.__dict__.__repr__()
-
-
