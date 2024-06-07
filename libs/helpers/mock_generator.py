@@ -1,3 +1,4 @@
+from enum import Enum
 import os
 import random
 from datetime import datetime, timedelta
@@ -6,16 +7,19 @@ from tqdm import tqdm
 from .utils import save_json as dipl_save_json, read_json as dipl_read_json
 
 
+DIPL_GENDER_MALE = 0
+DIPL_GENDER_FEMALE = 1
+
 # User wrapper that improves linting
 class Dipl_MockedUser:
   def __init__(self, **kwargs):
-    self.id = kwargs['id']
-    self.username = kwargs['username']
-    self.email = kwargs['email']
-    self.joined = kwargs['joined']
-    self.gender = kwargs['gender']
-    self.location = kwargs['location']
-    self.dob = kwargs['birth_date']
+    self.id: int = kwargs['id']
+    self.username: str = kwargs['username']
+    self.email: str = kwargs['email']
+    self.joined: str = kwargs['joined']
+    self.gender: int = kwargs['gender']
+    self.location: str = kwargs['location']
+    self.birth_date: str = kwargs['birth_date']
 
 
 
@@ -64,7 +68,7 @@ def get_mocks(**kwargs) -> list[Dipl_MockedUser]:
 
   save_dir = './libs/mocks'
   users_path = f'{save_dir}/users.json'
-  user_mocks = []
+  user_mocks: list[Dipl_MockedUser] = []
 
   if os.path.isdir(save_dir) == False:
     os.mkdir(save_dir)
@@ -74,16 +78,23 @@ def get_mocks(**kwargs) -> list[Dipl_MockedUser]:
 
     user_mocks = generate_mock_data()
     print('Saving users...')
-    dipl_save_json(user_mocks, users_path)
+    dipl_save_json(
+      [user.__dict__ for user in user_mocks],
+      users_path
+    )
 
   else:
-    user_mocks = dipl_read_json(users_path)
+    user_dict_arr = dipl_read_json(users_path)
+    user_mocks = [
+      Dipl_MockedUser(**user_dict)
+      for user_dict in user_dict_arr
+    ]
 
   if kwargs.get('show_logs', False):
     users_size_mb = os.path.getsize(users_path) / 1024 / 1024
     print(f'Read file "{users_path}": {round(users_size_mb, 2)} MB ({len(user_mocks)} rows)')
 
-  return [Dipl_MockedUser(u) for u in user_mocks]
+  return user_mocks
 
 
 # Generates mock data (without saving it)
@@ -100,20 +111,20 @@ def generate_mock_data():
 
   print('Generating users...')
   for user_id in tqdm(range(1, user_num + 1)):
-    birthday = rand_datetime(datetime_limit, datetime.now())
+    birth_date = rand_datetime(datetime_limit, datetime.now())
     joined_date = datetime.now() + timedelta(days=random.randint(-1000, -3))
     location = f'Location_{random.randint(1, 100)}'
-    is_male = user_id % 2 == 0
+    user_gender = DIPL_GENDER_MALE if user_id % 2 == 0 else DIPL_GENDER_FEMALE
 
-    social_media_user_mock = Dipl_MockedUser({
-      'id': user_id,
-      'username': f'user_{user_id}',
-      'email': f'user_{user_id}@example.com',
-      'joined': joined_date.strftime('%Y-%m-%d'),
-      'gender': is_male,
-      'location': location,
-      'birth_date': birthday.strftime('%Y-%m-%d')
-    })
+    social_media_user_mock = Dipl_MockedUser(
+      id=user_id,
+      username=f'user_{user_id}',
+      email=f'user_{user_id}@example.com',
+      joined=joined_date.strftime('%Y-%m-%d'),
+      gender=user_gender,
+      location=location,
+      birth_date=birth_date.strftime('%Y-%m-%d')
+    )
     user_mocks.append(social_media_user_mock)
 
   return user_mocks

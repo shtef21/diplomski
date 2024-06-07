@@ -3,7 +3,7 @@ import json
 #from dateutil.parser import parse as parse_date
 
 
-def data_to_json(data):
+def data_to_json(data) -> str:
   return json.dumps(data)
 
 def json_to_data(json_str):

@@ -1,7 +1,7 @@
 import time
 from confluent_kafka import Consumer, KafkaError, KafkaException
 from colorama import Fore, Style, Back
-from ...helpers.proj_config import consumer_group_json, max_msg_size, topic_name_json
+from ...helpers.proj_config import consumer_group_json, max_msg_size, topic_name_json, topic_name_proto
 from ..message import Dipl_JsonBatchInfo
 
 
@@ -51,8 +51,13 @@ class Dipl_JsonConsumer:
             raise KafkaException(msg.error())
 
         else:
-          info = Dipl_JsonBatchInfo(msg)
-          consume_callback(info)
+          if msg.topic() == topic_name_json:
+            info = Dipl_JsonBatchInfo(msg)
+            consume_callback(info)
+          else:
+            # Only happens if topics_to_consume has many topics
+            self.log(f'Non-standard message received:')
+            self.log(msg.value())
 
     except KeyboardInterrupt:
       self.log('^C')

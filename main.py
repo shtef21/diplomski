@@ -3,13 +3,13 @@
 
 import time
 
-from libs.helpers.utils import bytes_to_int
-from libs.kafka.message import Dipl_JsonBatch
 from libs.kafka.json.producer import Dipl_JsonProducer
 from libs.kafka.json.consumer import Dipl_JsonConsumer
 from libs.helpers.mock_generator import Dipl_MockGenerator
-from libs.helpers.proj_config import ARGS, default_prod_sleep
-from libs.test_runner import monitor_tests, run_all_tests, show_stats
+from libs.helpers.proj_config import ARGS
+from libs.kafka.message import Dipl_JsonBatch
+from libs.kafka.protobuf.proto_producer import Dipl_ProtoProducer
+from libs.test_runner import monitor_json_tests, run_json_tests, run_proto_tests, show_stats
 
 
 # Mocked data handling
@@ -22,16 +22,17 @@ mock_generator = Dipl_MockGenerator(
 # Start JSON producer
 if ARGS.is_json_producer:
   producer = Dipl_JsonProducer(ARGS.bootstrap_server)
-  run_all_tests(producer, mock_generator)
+  run_json_tests(producer, mock_generator)
 
 # Start JSON consumer
 elif ARGS.is_json_consumer:
   consumer = Dipl_JsonConsumer(ARGS.bootstrap_server)
-  monitor_tests(consumer)
+  monitor_json_tests(consumer)
 
 # Start proto producer
 elif ARGS.is_proto_producer:
-  pass
+  producer = Dipl_ProtoProducer(ARGS.bootstrap_server, ARGS.schema_registry_url)
+  run_proto_tests(producer, mock_generator)
 
 # Start proto consumer
 elif ARGS.is_proto_consumer:
