@@ -69,18 +69,7 @@ def select_arr(query) -> list[any]:
   query_results = []
   def _get_results(cursor: sqlite3.Cursor):
     nonlocal query_results
-    cursor.execute(f"""
-      SELECT
-        user_count,
-        AVG(consume_duration) as cduration_avg,
-        SUM(
-          (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
-          * (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
-        ) / (COUNT(consume_duration)-1)
-        AS cduration_variance
-      FROM {db_tablename}
-      GROUP BY user_count
-    """)
+    cursor.execute(query)
     query_results = cursor.fetchall()
   __operate_on_db(_get_results)
   return query_results

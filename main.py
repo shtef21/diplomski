@@ -7,11 +7,12 @@ import os
 from libs.kafka.json.producer import Dipl_JsonProducer
 from libs.kafka.json.consumer import Dipl_JsonConsumer
 from libs.helpers.mock_generator import Dipl_MockGenerator
-from libs.helpers.proj_config import ARGS
+from libs.helpers.proj_config import ARGS, db_tablename
 from libs.kafka.message import Dipl_JsonBatch
 from libs.kafka.protobuf.proto_consumer import Dipl_ProtoConsumer
 from libs.kafka.protobuf.proto_producer import Dipl_ProtoProducer
 from libs.test_runner import monitor_tests, run_all_tests, show_stats
+from libs.helpers import db
 
 
 # Mocked data handling
@@ -20,11 +21,13 @@ mock_generator = Dipl_MockGenerator(
   show_logs=ARGS.show_logs
 )
 
-# Reset DB?
-if ARGS.reset_db and os.path.exists('./sql.db'):
-  os.remove('./sql.db')
-  print('DB deleted.')
 
+# Initialize DB if needed
+if ARGS.reset_db:
+  if os.path.exists('./sql.db'):
+    os.remove('./sql.db')
+  db.create_stats_table()
+  print(f'DB initialized; table {db_tablename}')
 
 
 # Start JSON producer
@@ -43,8 +46,9 @@ elif ARGS.is_proto_consumer:
   consumer = Dipl_ProtoConsumer(ARGS.bootstrap_server)
   monitor_tests(consumer)
 
+
 # Show stats
-elif ARGS.is_stats:
+if ARGS.is_stats:
   show_stats()
 
 # TODO: Use 'seaborn' for visualizing data (not matplotlib)?

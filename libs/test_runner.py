@@ -83,16 +83,14 @@ def run_all_tests(
 
 
 
-def monitor_tests(consumer: any): #Dipl_JsonConsumer):
+def monitor_tests(consumer): #Dipl_JsonConsumer):
 
   print('Started test monitoring')
 
-  db.create_stats_table()
-  print(f'Created table {db_tablename}')
 
   results: list[Dipl_BatchInfo] = []
   def consume_callback(msg: Dipl_BatchInfo):
-    consumer.log(f'consumed message {msg.id} of size {round(msg.size_kb, 2)}kB')
+    consumer.log(f'consumed message {msg.id} of size {round(msg.size_kb, 2)}kB in {round(msg.consume_duration * 1000)}ms')
     results.append(msg)
   consumer.run(
     consume_callback
@@ -118,29 +116,32 @@ def show_stats():
         AS cduration_variance
       FROM {db_tablename}
       GROUP BY user_count, type
+      ORDER BY user_count, type
     """)
-
-  breakpoint()
+  
+  if len(results) == 0:
+    print('Found 0 rows. Cannot show stats.')
+    return
 
   user_counts = [
     str(row[0]).replace('0000','0K').replace('000', 'K')
     for row in results
-  ]
-  y_consume_time = [row[1] for row in results]
+  ] 
+  y_consume_time = [row[2] * 1000 for row in results]
 
-  plt.figure(figsize=(10, 6))
+  plt.figure(figsize=(15, 6), frameon=True)
   # plt.bar(user_counts, y_consume_time, color='skyblue', width=0.4)
 
   # Mock two types of bar charts
   for i in range(len(user_counts)):
-    if i % 2 == 0:
+    if results[i][1] == 'json':
       plt.bar(user_counts[i], y_consume_time[i], color='blue', width=0.4)
-    else:
+    elif results[i][1] == 'proto':
       plt.bar(user_counts[i], y_consume_time[i], color='maroon', width=0.4)
 
   plt.xlabel('User count')
-  plt.ylabel('Consume duration')
-  plt.title('User count vs Consume duration')
+  plt.ylabel('Consume duration (ms)')
+  plt.title('JSON (blue) vs PROTO (red) average consume duration')
 
   plt.show()
 

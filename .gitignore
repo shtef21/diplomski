@@ -3,4 +3,5 @@ libs/mocks/users.json
 libs/mocks/posts.json
 __pycache__
 private-notes.md
+sql_dumps
 sql.db
