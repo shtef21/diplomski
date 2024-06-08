@@ -110,10 +110,11 @@ def show_stats():
         type,
         AVG(consume_duration) as cduration_avg,
         SUM(
-          (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
-          * (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
-        ) / (COUNT(consume_duration)-1)
-        AS cduration_variance
+            (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
+            * (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
+          ) / (COUNT(consume_duration)-1)
+          AS cduration_variance,
+        AVG(size_kb) size_kb_avg
       FROM {db_tablename}
       GROUP BY user_count, type
       ORDER BY user_count, type
@@ -128,6 +129,8 @@ def show_stats():
     for row in results
   ] 
   y_consume_time = [row[2] * 1000 for row in results]
+  sizes_kb_avg = [row[4] for row in results]  # TODO: Add size above bars?
+  # TODO: somehow display variance in durations? with opacity? with many bars?
 
   plt.figure(figsize=(15, 6), frameon=True)
   # plt.bar(user_counts, y_consume_time, color='skyblue', width=0.4)
@@ -137,7 +140,7 @@ def show_stats():
     if results[i][1] == 'json':
       plt.bar(user_counts[i], y_consume_time[i], color='blue', width=0.4)
     elif results[i][1] == 'proto':
-      plt.bar(user_counts[i], y_consume_time[i], color='maroon', width=0.4)
+      plt.bar(user_counts[i], y_consume_time[i], color='maroon', width=0.5)
 
   plt.xlabel('User count')
   plt.ylabel('Consume duration (ms)')
