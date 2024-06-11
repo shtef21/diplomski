@@ -1,3 +1,5 @@
+
+import os
 import sqlite3
 from typing import Callable, Any
 
@@ -10,9 +12,14 @@ from pprint import pprint
 
 
 def __operate_on_db(what_to_do: Callable[[sqlite3.Cursor], None], custom_db: str = None):
+
+  if custom_db and os.path.exists(custom_db) == False:
+    raise Exception(f"Cannot find DB: {custom_db}")
+  
   try:
-    # Connect to DB and create cursor
     conn_db = default_db_path if not custom_db else custom_db
+
+    # Connect to DB and create cursor
     sqlite_conn = sqlite3.connect(conn_db)
     cursor = sqlite_conn.cursor()
 

@@ -1,7 +1,11 @@
 
-import sqlite3
+from pprint import pprint
 import matplotlib.pyplot as plt
-import copy
+import os
+from pathlib import Path
+from typing import Any, Callable
+
+from libs.models.stats import Dipl_StatsList, Dipl_StatsRow
 
 from .kafka.proto.proto_consumer import Dipl_ProtoConsumer
 from .helpers import db
@@ -22,26 +26,27 @@ def create_test_run(
   Dipl_BatchClass,
 ):
 
-  # Publish 1 user in batch
+  # Publish 1, 50, 100 users in batch
   if type == 'small':
-    for reps in range(reps_per_test_case):
-      yield Dipl_BatchClass(mock_generator, spawn_count=1)
+    for user_count in [1, 50, 100]:
+      for reps in range(reps_per_test_case):
+        yield Dipl_BatchClass(mock_generator, user_count)
 
-  # Publish 100, 200, ..., 1000 users
+  # Publish 500, 1000 users
   elif type == 'medium':
-    for user_count in range(100, 1001, 100):
+    for user_count in [500, 1000]:
       for reps in range(reps_per_test_case):
         yield Dipl_BatchClass(mock_generator, user_count)
 
-  # Publish 2000, 3000, ..., 10000 users
+  # Publish 2500, 5000, 7500, 10000 users
   elif type == 'large':
-    for user_count in range(2000, 10001, 1000):
+    for user_count in [2500, 5000, 7500, 10000]:
       for reps in range(reps_per_test_case):
         yield Dipl_BatchClass(mock_generator, user_count)
 
-  # Publish 20000, 25000, ..., 40000 users
+  # Publish 25000, 40000, 55000 users
   elif type == 'extra_large':
-    for user_count in range(20000, 55001, 5000):
+    for user_count in [25000, 40000, 55000]:
       for reps in range(reps_per_test_case):
         yield Dipl_BatchClass(mock_generator, user_count)
 
@@ -52,7 +57,7 @@ def run_all_tests(
   p_prod: Dipl_ProtoProducer,
   mock_generator: Dipl_MockGenerator
 ):
-  reps = 10
+  reps = 50
 
   def callback(prod, err, msg):
     if err is not None:
@@ -110,34 +115,77 @@ def monitor_tests(cons: Dipl_JsonConsumer | Dipl_ProtoConsumer, dry_run: bool = 
 
 def show_stats(stats_path: str):
 
-  results = db.calculate_stats(stats_path)
+  stats_list = db.calculate_stats(stats_path)
   
-  if len(results) == 0:
+  if len(stats_list.data) == 0:
     print('Found 0 rows. Cannot show stats.')
     return
 
-  user_counts = [
-    str(row.user_count).replace('0000','0K').replace('000', 'K')
-    for row in results
-  ] 
-  y_consume_time = [row.consume_duration_average * 1000 for row in results]
-  sizes_kb_avg = [row.size_kb_avg for row in results]  # TODO: Add size above bars?
   # TODO: somehow display variance in durations? with opacity? with many bars?
 
-  # Set size and grid
-  plt.figure(figsize=(12, 3), frameon=True)
-  plt.grid()
+  # Make plots
+  fig, axes = plt.subplots(1, 2, figsize=(15, 7))
+  fig.suptitle('JSON (blue) vs PROTO (red)')
 
-  # Mock two types of bar charts
-  for i in range(len(user_counts)):
-    if results[i][1] == 'json':
-      plt.bar(user_counts[i], y_consume_time[i], color='blue', width=0.4)
-    elif results[i][1] == 'proto':
-      plt.bar(user_counts[i], y_consume_time[i], color='maroon', width=0.5)
+  # Unpack plots and set grids
+  plt_duration, plt_size = axes.flatten()
+  plt_duration.grid()
+  plt_size.grid()
 
-  plt.xlabel('Object count')
-  plt.ylabel('Consume duration (ms)')
-  plt.title('JSON (blue) vs PROTO (red) average consume duration')
+
+  def _set_plot(
+    plot,
+    data: Dipl_StatsList,
+    ylabel: str,
+    get_val: Callable[[Dipl_StatsRow], Any]
+  ):
+    for idx, stats in enumerate(data):
+      # Show bar
+      plot.set_xlabel('Object count')
+      plot.set_ylabel(ylabel)
+      x_prefix = ' ' if stats.type == 'proto' else ''  # Prefix ensures separate bars
+
+      bar = plot.bar(
+        stats.user_count_str,
+        get_val(stats),
+        color=stats.plt_bar_color,
+        width=stats.plt_bar_width,
+        alpha=0.5
+      )[0]
+      # Add a label above bar if there's enough space
+      if stats.type == 'json' or stats.type == 'proto' and stats.user_count >= 5000:
+        height = bar.get_height()
+        plot.text(
+          bar.get_x() + bar.get_width() / 2,
+          height,
+          round(height),
+          ha='center',
+          va='bottom'
+        )
+
+  # Show plot comparing consume durations
+  _set_plot(
+    plt_duration,
+    stats_list.data,
+    'Consume duration (ms)',
+    lambda stats: stats.consume_duration_avg_ms,
+  )
+
+  # Show plot comparing message sizes
+  _set_plot(
+    plt_size,
+    stats_list.data,
+    'Message size (kB)',
+    lambda stats: stats.size_kb_avg
+  )
+
+  filename = Path(stats_path).stem
+  output_dir = './output'
+  output_path = f'{output_dir}/{filename}.png'
+  os.makedirs(output_dir, exist_ok=True)
+
+  plt.savefig(output_path)
+  print(f'Saved figure to {output_path}')
 
   plt.show()
 
