@@ -3,16 +3,16 @@ import sqlite3
 import matplotlib.pyplot as plt
 import copy
 
-from .kafka.protobuf.proto_consumer import Dipl_ProtoConsumer
+from .kafka.proto.proto_consumer import Dipl_ProtoConsumer
 from .helpers import db
 from .helpers.mock_generator import Dipl_MockGenerator
 from .helpers.utils import bytes_to_int
 from .helpers.proj_config import default_prod_sleep, db_tablename
 from .kafka.json.consumer import Dipl_JsonConsumer
-from .kafka.protobuf.proto_consumer import Dipl_ProtoConsumer
+from .kafka.proto.proto_consumer import Dipl_ProtoConsumer
 from .kafka.message import Dipl_JsonBatch, Dipl_BatchInfo, Dipl_ProtoBatch
 from .kafka.json.producer import Dipl_JsonProducer
-from .kafka.protobuf.proto_producer import Dipl_ProtoProducer
+from .kafka.proto.proto_producer import Dipl_ProtoProducer
 
 
 def create_test_run(
