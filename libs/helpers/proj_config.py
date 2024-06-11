@@ -3,16 +3,16 @@ import argparse
 
 
 topic_name_json = 'diplomski_json'
-topic_name_proto = 'diplomski_protobuf'
-consumer_group_json = 'strings_group'
-consumer_group_proto = 'protobuf_group'
+topic_name_proto = 'diplomski_proto'
+consumer_group_json = 'json_group'
+consumer_group_proto = 'proto_group'
 max_msg_size = 10_000_000  # 10 MB
 
 default_bserver = 'localhost:9092'
 default_prod_sleep = 0.5
 default_sr_url = 'http://localhost:8081'
 
-db_filename = 'sql.db'
+default_db_path = './sql.db'
 db_tablename = 'measurements'
 
 
@@ -61,6 +61,13 @@ class ArgsWraper():
       default=default_sr_url,
       help=f'Schema registry server (default={default_sr_url})'
     )
+    # is_dry_run
+    arg_parser.add_argument(
+      '--dry-run',
+      dest='is_dry_run',
+      action='store_true',
+      help='If sent, output results will not be saved'
+    )
 
     arg_required_group = arg_parser.add_mutually_exclusive_group(required=True)
     # is_produce
@@ -68,7 +75,7 @@ class ArgsWraper():
       '--run-producers',
       dest='is_produce',
       action='store_true',
-      help='If sent, loads up producing of JSON and protobuf'
+      help='If sent, loads up producing of JSON and PROTO messages'
     )
     # is_json_consumer
     arg_required_group.add_argument(
@@ -91,6 +98,15 @@ class ArgsWraper():
       action='store_true',
       help='If sent, only shows stats'
     )
+    
+    # stats_path
+    arg_parser.add_argument(
+      '--stats-path',
+      dest='stats_path',
+      type=str,
+      default=default_db_path,
+      help=f'Bootstrap server which holds Kafka brokers (default={default_db_path})'
+    )
 
     # Parse and save args to enable linting
     a = arg_parser.parse_args()
@@ -98,7 +114,9 @@ class ArgsWraper():
     self.reset_db = a.reset_db
     self.show_logs = a.show_logs
     self.bootstrap_server = a.bootstrap_server
+    self.stats_path = a.stats_path
     self.schema_registry_url = a.schema_registry_url
+    self.is_dry_run = a.is_dry_run
     self.is_produce = a.is_produce
     self.is_json_consumer = a.is_json_consumer
     self.is_proto_consumer = a.is_proto_consumer

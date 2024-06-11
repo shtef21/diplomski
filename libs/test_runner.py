@@ -3,11 +3,13 @@ import sqlite3
 import matplotlib.pyplot as plt
 import copy
 
+from .kafka.protobuf.proto_consumer import Dipl_ProtoConsumer
 from .helpers import db
 from .helpers.mock_generator import Dipl_MockGenerator
 from .helpers.utils import bytes_to_int
 from .helpers.proj_config import default_prod_sleep, db_tablename
 from .kafka.json.consumer import Dipl_JsonConsumer
+from .kafka.protobuf.proto_consumer import Dipl_ProtoConsumer
 from .kafka.message import Dipl_JsonBatch, Dipl_BatchInfo, Dipl_ProtoBatch
 from .kafka.json.producer import Dipl_JsonProducer
 from .kafka.protobuf.proto_producer import Dipl_ProtoProducer
@@ -39,7 +41,7 @@ def create_test_run(
 
   # Publish 20000, 25000, ..., 40000 users
   elif type == 'extra_large':
-    for user_count in range(20000, 40001, 5000):
+    for user_count in range(20000, 55001, 5000):
       for reps in range(reps_per_test_case):
         yield Dipl_BatchClass(mock_generator, user_count)
 
@@ -83,57 +85,48 @@ def run_all_tests(
 
 
 
-def monitor_tests(consumer): #Dipl_JsonConsumer):
+def monitor_tests(cons: Dipl_JsonConsumer | Dipl_ProtoConsumer, dry_run: bool = False):
 
-  print('Started test monitoring')
-
+  consumer_type = 'JSON' if type(cons) == Dipl_JsonConsumer else 'PROTO'
+  print(f'Started {consumer_type} test monitoring')
 
   results: list[Dipl_BatchInfo] = []
   def consume_callback(msg: Dipl_BatchInfo):
-    consumer.log(f'consumed message {msg.id} of size {round(msg.size_kb, 2)}kB in {round(msg.consume_duration * 1000)}ms')
+    cons.log(f'Consumed msg {msg.id} of size {round(msg.size_kb, 2)}kB in {round(msg.consume_duration * 1000)}ms')
     results.append(msg)
-  consumer.run(
+  cons.run(
     consume_callback
   )
 
-  db.insert_results(results)
-  consumer.log(f'Inserted {len(results)} rows of JSON results.')
+  if not dry_run:
+    db.insert_results(results)
+    cons.log(f'Inserted {len(results)} rows of {consumer_type} results.')
+  else:
+    cons.log(f'Dry run specified. Ignoring {len(results)} rows {consumer_type} results.')
 
 
 
 
-def show_stats():
 
-  results = db.select_arr(f"""
-      SELECT
-        user_count,
-        type,
-        AVG(consume_duration) as cduration_avg,
-        SUM(
-            (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
-            * (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
-          ) / (COUNT(consume_duration)-1)
-          AS cduration_variance,
-        AVG(size_kb) size_kb_avg
-      FROM {db_tablename}
-      GROUP BY user_count, type
-      ORDER BY user_count, type
-    """)
+def show_stats(stats_path: str):
+
+  results = db.calculate_stats(stats_path)
   
   if len(results) == 0:
     print('Found 0 rows. Cannot show stats.')
     return
 
   user_counts = [
-    str(row[0]).replace('0000','0K').replace('000', 'K')
+    str(row.user_count).replace('0000','0K').replace('000', 'K')
     for row in results
   ] 
-  y_consume_time = [row[2] * 1000 for row in results]
-  sizes_kb_avg = [row[4] for row in results]  # TODO: Add size above bars?
+  y_consume_time = [row.consume_duration_average * 1000 for row in results]
+  sizes_kb_avg = [row.size_kb_avg for row in results]  # TODO: Add size above bars?
   # TODO: somehow display variance in durations? with opacity? with many bars?
 
-  plt.figure(figsize=(15, 6), frameon=True)
-  # plt.bar(user_counts, y_consume_time, color='skyblue', width=0.4)
+  # Set size and grid
+  plt.figure(figsize=(12, 3), frameon=True)
+  plt.grid()
 
   # Mock two types of bar charts
   for i in range(len(user_counts)):

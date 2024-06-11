@@ -1,26 +1,28 @@
 import sqlite3
+from typing import Callable
 
-from libs.kafka.message import Dipl_BatchInfo
-from .proj_config import db_filename, db_tablename
+
+from ..kafka.message import Dipl_BatchInfo
+from .proj_config import default_db_path, db_tablename
 from pprint import pprint
 
 
-def __operate_on_db(what_to_do):
+def __operate_on_db(what_to_do: Callable[[sqlite3.Cursor], None], custom_db: str = None):
   try:
     # Connect to DB and create cursor
-    sqlite_conn = sqlite3.connect(db_filename)
+    conn_db = default_db_path if not custom_db else custom_db
+    sqlite_conn = sqlite3.connect(conn_db)
     cursor = sqlite_conn.cursor()
-    print('DB initialized.')
 
     # Give cursor to the lambda
     what_to_do(cursor)
-    # Commit after every operation
+
+    # Commit operation
     sqlite_conn.commit()
 
     # Close the cursor
     cursor.close()
 
-  # Handle errors
   except sqlite3.Error as error:
     print('sqlite3.Error occurred -', error)
 
@@ -28,7 +30,6 @@ def __operate_on_db(what_to_do):
   finally:
     if sqlite_conn:
       sqlite_conn.close()
-      print('SQLite connection closed.')
 
 
 def create_stats_table():
@@ -65,31 +66,48 @@ def insert_results(results: list[Dipl_BatchInfo]):
   __operate_on_db(_insert_results)
 
 
-def select_arr(query) -> list[any]:
+class Dipl_StatsRow():
+  def __init__(self, r):
+    self.user_count = r[0]
+    self.type = r[1]
+    self.consume_duration_average = r[2]
+    self.consume_duration_variance = r[3]
+    self.size_kb_avg = r[4]
+
+def calculate_stats(custom_db_path) -> list[Dipl_StatsRow]:
+  query = f"""
+      SELECT
+        user_count,
+        type,
+        AVG(consume_duration) as consume_duration_average,
+        SUM(
+            (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
+            * (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
+          ) / (COUNT(consume_duration)-1)
+          AS consume_duration_variance,
+        AVG(size_kb) size_kb_avg
+      FROM {db_tablename}
+      GROUP BY user_count, type
+      ORDER BY user_count, type
+  """
   query_results = []
+
   def _get_results(cursor: sqlite3.Cursor):
     nonlocal query_results
     cursor.execute(query)
     query_results = cursor.fetchall()
-  __operate_on_db(_get_results)
+  __operate_on_db(_get_results, custom_db_path)
   return query_results
 
 
-def show_db_version(cursor: sqlite3.Cursor):
-  # Write a query and execute it with cursor
-  query = 'select sqlite_version();'
-  cursor.execute(query)
+def show_db_version():
+  result = None
 
-  # Fetch and output result
-  result = cursor.fetchone()
+  def _show_version(cursor: sqlite3.Cursor):
+    nonlocal result
+    cursor.execute('select sqlite_version()')
+    result = cursor.fetchone()
+
   print(f'> SQLite version is {result[0]}')
+  __operate_on_db(_show_version)
 
-
-def select_data_from_db(cursor: sqlite3.Cursor):
-  query = f'SELECT * FROM {proj_config.db_tablename}'
-  cursor.execute(query)
-  output = cursor.fetchall()
-  print(f'> Fetched {len(output)} rows. Take a look at first 5:')
-  print('-' * 50)
-  pprint(output[:5])
-  print('-' * 50)
