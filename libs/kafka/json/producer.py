@@ -1,7 +1,7 @@
 import time
 from confluent_kafka import Producer
 from colorama import Fore, Style, Back
-from ..message import Dipl_JsonBatch
+from ...models.message import Dipl_JsonBatch
 from ...helpers.proj_config import default_prod_sleep, topic_name_json, max_msg_size
 
 
@@ -18,7 +18,7 @@ class Dipl_JsonProducer:
   # log function
   def log(self, *args, **kwargs):
     print(
-      Back.BLUE + Fore.WHITE + 'JProducer:' + Style.RESET_ALL,
+      Back.BLUE + Fore.WHITE + 'J_Producer:' + Style.RESET_ALL,
       *args,
       **kwargs
     )

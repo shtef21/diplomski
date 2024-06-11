@@ -10,7 +10,7 @@ from .helpers.utils import bytes_to_int
 from .helpers.proj_config import default_prod_sleep, db_tablename
 from .kafka.json.consumer import Dipl_JsonConsumer
 from .kafka.proto.proto_consumer import Dipl_ProtoConsumer
-from .kafka.message import Dipl_JsonBatch, Dipl_BatchInfo, Dipl_ProtoBatch
+from .models.message import Dipl_JsonBatch, Dipl_BatchInfo, Dipl_ProtoBatch
 from .kafka.json.producer import Dipl_JsonProducer
 from .kafka.proto.proto_producer import Dipl_ProtoProducer
 
@@ -135,7 +135,7 @@ def show_stats(stats_path: str):
     elif results[i][1] == 'proto':
       plt.bar(user_counts[i], y_consume_time[i], color='maroon', width=0.5)
 
-  plt.xlabel('User count')
+  plt.xlabel('Object count')
   plt.ylabel('Consume duration (ms)')
   plt.title('JSON (blue) vs PROTO (red) average consume duration')
 

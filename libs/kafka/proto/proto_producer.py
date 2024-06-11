@@ -1,7 +1,7 @@
 import time
 from confluent_kafka import Producer
 from colorama import Fore, Style, Back
-from ..message import Dipl_JsonBatch, Dipl_ProtoBatch
+from ...models.message import Dipl_JsonBatch, Dipl_ProtoBatch
 
 from confluent_kafka.serialization import SerializationContext, MessageField
 from confluent_kafka.schema_registry import SchemaRegistryClient
@@ -39,7 +39,7 @@ class Dipl_ProtoProducer:
   # log function
   def log(self, *args, **kwargs):
     print(
-      Back.LIGHTBLUE_EX + Fore.WHITE + 'PProducer:' + Style.RESET_ALL,
+      Back.LIGHTBLUE_EX + Fore.WHITE + 'P_Producer:' + Style.RESET_ALL,
       *args,
       **kwargs
     )

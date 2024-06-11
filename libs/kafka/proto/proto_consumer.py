@@ -6,7 +6,7 @@ from confluent_kafka.serialization import SerializationContext, MessageField
 from confluent_kafka.schema_registry.protobuf import ProtobufDeserializer
 
 from ...helpers.proj_config import consumer_group_proto, max_msg_size, topic_name_proto
-from ..message import Dipl_BatchInfo
+from ...models.message import Dipl_BatchInfo
 from .protoc_out import user_pb2
 from .user_pb2_wrapper import Dipl_UserListPb2_Wrapper
 
@@ -35,7 +35,7 @@ class Dipl_ProtoConsumer:
   # log function
   def log(self, *args, **kwargs):
     print(
-      Back.LIGHTRED_EX + Fore.WHITE + 'PConsumer:' + Style.RESET_ALL,
+      Back.LIGHTRED_EX + Fore.WHITE + 'P_Consumer:' + Style.RESET_ALL,
       *args,
       **kwargs
     )

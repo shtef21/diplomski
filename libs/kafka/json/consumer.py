@@ -4,7 +4,7 @@ from colorama import Fore, Style, Back
 
 from libs.helpers.utils import json_to_data
 from ...helpers.proj_config import consumer_group_json, max_msg_size, topic_name_json, topic_name_proto
-from ..message import Dipl_BatchInfo
+from ...models.message import Dipl_BatchInfo
 
 
 class Dipl_JsonConsumer:
@@ -21,7 +21,7 @@ class Dipl_JsonConsumer:
   # log function
   def log(self, *args, **kwargs):
     print(
-      Back.RED + Fore.WHITE + 'JConsumer:' + Style.RESET_ALL,
+      Back.RED + Fore.WHITE + 'J_Consumer:' + Style.RESET_ALL,
       *args,
       **kwargs
     )

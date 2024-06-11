@@ -1,8 +1,10 @@
 import sqlite3
-from typing import Callable
+from typing import Callable, Any
+
+from libs.models.stats import Dipl_StatsList
 
 
-from ..kafka.message import Dipl_BatchInfo
+from ..models.message import Dipl_BatchInfo
 from .proj_config import default_db_path, db_tablename
 from pprint import pprint
 
@@ -66,15 +68,8 @@ def insert_results(results: list[Dipl_BatchInfo]):
   __operate_on_db(_insert_results)
 
 
-class Dipl_StatsRow():
-  def __init__(self, r):
-    self.user_count = r[0]
-    self.type = r[1]
-    self.consume_duration_average = r[2]
-    self.consume_duration_variance = r[3]
-    self.size_kb_avg = r[4]
 
-def calculate_stats(custom_db_path) -> list[Dipl_StatsRow]:
+def calculate_stats(custom_db_path) -> Dipl_StatsList:
   query = f"""
       SELECT
         user_count,
@@ -97,7 +92,7 @@ def calculate_stats(custom_db_path) -> list[Dipl_StatsRow]:
     cursor.execute(query)
     query_results = cursor.fetchall()
   __operate_on_db(_get_results, custom_db_path)
-  return query_results
+  return Dipl_StatsList(query_results)
 
 
 def show_db_version():

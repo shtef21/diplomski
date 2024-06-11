@@ -9,7 +9,7 @@ from libs.kafka.json.producer import Dipl_JsonProducer
 from libs.kafka.json.consumer import Dipl_JsonConsumer
 from libs.helpers.mock_generator import Dipl_MockGenerator
 from libs.helpers.proj_config import ARGS, db_tablename, default_db_path
-from libs.kafka.message import Dipl_JsonBatch
+from libs.models.message import Dipl_JsonBatch
 from libs.kafka.proto.proto_consumer import Dipl_ProtoConsumer
 from libs.kafka.proto.proto_producer import Dipl_ProtoProducer
 from libs.test_runner import monitor_tests, run_all_tests, show_stats

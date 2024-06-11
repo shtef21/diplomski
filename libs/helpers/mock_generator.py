@@ -5,22 +5,11 @@ from datetime import datetime, timedelta
 from tqdm import tqdm
 
 from .utils import save_json as dipl_save_json, read_json as dipl_read_json
+from ..models.mocked_user import Dipl_MockedUser
 
 
 DIPL_GENDER_MALE = 0
 DIPL_GENDER_FEMALE = 1
-
-# User wrapper that improves linting
-class Dipl_MockedUser:
-  def __init__(self, **kwargs):
-    self.id: int = kwargs['id']
-    self.username: str = kwargs['username']
-    self.email: str = kwargs['email']
-    self.joined: str = kwargs['joined']
-    self.gender: int = kwargs['gender']
-    self.location: str = kwargs['location']
-    self.birth_date: str = kwargs['birth_date']
-
 
 
 class Dipl_MockGenerator:

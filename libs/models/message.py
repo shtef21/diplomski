@@ -5,7 +5,7 @@ from confluent_kafka import TIMESTAMP_CREATE_TIME
 from ..helpers.utils import data_to_json, json_to_data, int_to_bytes, bytes_to_int
 from ..helpers.mock_generator import DIPL_GENDER_FEMALE, DIPL_GENDER_MALE, Dipl_MockGenerator
 
-from .proto.protoc_out import user_pb2
+from ..kafka.proto.protoc_out import user_pb2
 
 
 class Dipl_Batch:
