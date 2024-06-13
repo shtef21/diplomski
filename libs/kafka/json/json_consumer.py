@@ -4,7 +4,7 @@ from colorama import Fore, Style, Back
 
 from libs.helpers.utils import json_to_data
 from ...helpers.proj_config import consumer_group_json, max_msg_size, topic_name_json, topic_name_proto
-from ...models.message import Dipl_BatchInfo
+from ...models.measurement import Dipl_ConsumerMeasurement
 
 
 class Dipl_JsonConsumer:
@@ -55,7 +55,7 @@ class Dipl_JsonConsumer:
         else:
           if msg.topic() == topic_name_json:
             data = json_to_data(msg.value().decode('utf-8'))
-            info = Dipl_BatchInfo(msg, 'json', len(data))
+            info = Dipl_ConsumerMeasurement(msg, 'json', len(data))
             consume_callback(info)
           else:
             # Only happens if topics_to_consume has many topics

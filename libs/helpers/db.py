@@ -6,7 +6,7 @@ from typing import Callable, Any
 from libs.models.stats import Dipl_StatsList
 
 
-from ..models.message import Dipl_BatchInfo
+from ..models.measurement import Dipl_ConsumerMeasurement
 from .proj_config import default_db_path, db_tablename
 from pprint import pprint
 
@@ -57,7 +57,7 @@ def create_stats_table():
   __operate_on_db(_create_table)
 
 
-def insert_results(results: list[Dipl_BatchInfo]):
+def insert_results(results: list[Dipl_ConsumerMeasurement]):
   def _insert_results(cursor: sqlite3.Cursor):
     for res in results:
       cursor.execute(f"""

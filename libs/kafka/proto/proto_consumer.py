@@ -6,7 +6,7 @@ from confluent_kafka.serialization import SerializationContext, MessageField
 from confluent_kafka.schema_registry.protobuf import ProtobufDeserializer
 
 from ...helpers.proj_config import consumer_group_proto, max_msg_size, topic_name_proto
-from ...models.message import Dipl_BatchInfo
+from ...models.measurement import Dipl_ConsumerMeasurement
 from .protoc_out import user_pb2
 from .user_pb2_wrapper import Dipl_UserListPb2_Wrapper
 
@@ -72,7 +72,7 @@ class Dipl_ProtoConsumer:
               msg.value(),
               SerializationContext(topic_name_proto, MessageField.VALUE)
             )
-            info = Dipl_BatchInfo(msg, 'proto', len(proto_msg.users))
+            info = Dipl_ConsumerMeasurement(msg, 'proto', len(proto_msg.users))
             consume_callback(info)
           else:
             # Only happens if topics_to_consume has many topics
