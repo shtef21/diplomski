@@ -35,7 +35,7 @@ class Dipl_ProtoConsumer:
   # log function
   def log(self, *args, **kwargs):
     print(
-      Back.LIGHTRED_EX + Fore.WHITE + 'P_Consumer:' + Style.RESET_ALL,
+      Back.YELLOW + Fore.WHITE + 'P_Consumer:' + Style.RESET_ALL,
       *args,
       **kwargs
     )

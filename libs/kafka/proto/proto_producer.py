@@ -1,14 +1,16 @@
 import time
 from confluent_kafka import Producer
 from colorama import Fore, Style, Back
-from ...models.message import Dipl_JsonBatch, Dipl_ProtoBatch
+from tqdm import tqdm
 
 from confluent_kafka.serialization import SerializationContext, MessageField
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.protobuf import ProtobufSerializer
 
-from .protoc_out import user_pb2
 from ...helpers.proj_config import default_prod_sleep, topic_name_proto, max_msg_size
+from ...models.message import Dipl_JsonBatch, Dipl_ProtoBatch
+
+from .protoc_out import user_pb2
 from .user_pb2_wrapper import Dipl_UserListPb2_Wrapper
 
 
@@ -39,7 +41,7 @@ class Dipl_ProtoProducer:
   # log function
   def log(self, *args, **kwargs):
     print(
-      Back.LIGHTBLUE_EX + Fore.WHITE + 'P_Producer:' + Style.RESET_ALL,
+      Back.GREEN + Fore.WHITE + 'P_Producer:' + Style.RESET_ALL,
       *args,
       **kwargs
     )
@@ -50,8 +52,8 @@ class Dipl_ProtoProducer:
     producer = Producer(self.config)
     self.log(f'Producing {len(self.produce_queue)} messages found in produce_queue...')
 
-    while len(self.produce_queue) > 0:
-      message_batch = self.produce_queue.pop()
+    for idx in tqdm(range(len(self.produce_queue))):
+      message_batch = self.produce_queue[idx]
       serialized_value = self.serialize(message_batch.data_proto, self.ser_context)
 
       producer.produce(
@@ -67,7 +69,8 @@ class Dipl_ProtoProducer:
           time.sleep(sleep_amount)
       else:
         time.sleep(default_prod_sleep)
-
+      
+    self.produce_queue = []
     self.log("Done producing.")
 
 

@@ -1,6 +1,8 @@
 import time
 from confluent_kafka import Producer
 from colorama import Fore, Style, Back
+from tqdm import tqdm
+
 from ...models.message import Dipl_JsonBatch
 from ...helpers.proj_config import default_prod_sleep, topic_name_json, max_msg_size
 
@@ -29,8 +31,8 @@ class Dipl_JsonProducer:
     producer = Producer(self.config)
     self.log(f'Producing {len(self.produce_queue)} messages found in produce_queue...')
 
-    while len(self.produce_queue) > 0:
-      message_batch = self.produce_queue.pop()
+    for idx in tqdm(range(len(self.produce_queue))):
+      message_batch = self.produce_queue[idx]
       producer.produce(
         topic = topic_name_json,
         key = message_batch.id_bytes,
@@ -45,6 +47,7 @@ class Dipl_JsonProducer:
       else:
         time.sleep(default_prod_sleep)
 
+    self.produce_queue = []
     self.log("Done producing.")
 
 

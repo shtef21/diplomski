@@ -12,10 +12,10 @@ from .helpers import db
 from .helpers.mock_generator import Dipl_MockGenerator
 from .helpers.utils import bytes_to_int
 from .helpers.proj_config import default_prod_sleep, db_tablename
-from .kafka.json.consumer import Dipl_JsonConsumer
+from .kafka.json.json_consumer import Dipl_JsonConsumer
 from .kafka.proto.proto_consumer import Dipl_ProtoConsumer
 from .models.message import Dipl_JsonBatch, Dipl_BatchInfo, Dipl_ProtoBatch
-from .kafka.json.producer import Dipl_JsonProducer
+from .kafka.json.json_producer import Dipl_JsonProducer
 from .kafka.proto.proto_producer import Dipl_ProtoProducer
 
 
@@ -59,12 +59,12 @@ def run_all_tests(
 ):
   reps = 50
 
-  def callback(prod, err, msg):
+  def callback(prod: Dipl_JsonProducer | Dipl_ProtoProducer, err, msg):
     if err is not None:
       prod.log(f'Failed to deliver message: {msg}: {err}')
     else:
       size_kb = len(msg) / 1024
-      prod.log(f'Produced message {bytes_to_int(msg.key())} of size {round(size_kb, 2)}kB')
+      # prod.log(f'Produced message {bytes_to_int(msg.key())} of size {round(size_kb, 2)}kB')
 
   def run_test(prod, test_size, batch_class):
     prod.produce_queue = []
@@ -76,18 +76,27 @@ def run_all_tests(
       sleep_amount=default_prod_sleep
     )
 
+  j_prod.log('Running a small test.')
   run_test(j_prod, 'small', Dipl_JsonBatch)
+  p_prod.log('Running a small test.')
   run_test(p_prod, 'small', Dipl_ProtoBatch)
 
+  j_prod.log('Running a medium test.')
   run_test(j_prod, 'medium', Dipl_JsonBatch)
+  p_prod.log('Running a medium test.')
   run_test(p_prod, 'medium', Dipl_ProtoBatch)
 
+  j_prod.log('Running a large test.')
   run_test(j_prod, 'large', Dipl_JsonBatch)
+  p_prod.log('Running a large test.')
   run_test(p_prod, 'large', Dipl_ProtoBatch)
 
+  j_prod.log('Running an extra large test.')
   run_test(j_prod, 'extra_large', Dipl_JsonBatch)
+  p_prod.log('Running an extra large test.')
   run_test(p_prod, 'extra_large', Dipl_ProtoBatch)
 
+  print('All tests done.')
 
 
 def monitor_tests(cons: Dipl_JsonConsumer | Dipl_ProtoConsumer, dry_run: bool = False):

@@ -19,7 +19,7 @@ db_tablename = 'measurements'
 
 
 # Wrapper which enables linting
-class ArgsWraper():
+class ArgReader():
   def __init__(self):
     # Initialize parser
     arg_parser = argparse.ArgumentParser(description="Kafka communication code")
@@ -121,6 +121,3 @@ class ArgsWraper():
     self.is_json_consumer = a.is_json_consumer
     self.is_proto_consumer = a.is_proto_consumer
     self.is_stats = a.is_stats
-
-
-ARGS = ArgsWraper()

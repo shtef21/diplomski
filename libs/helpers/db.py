@@ -76,7 +76,7 @@ def insert_results(results: list[Dipl_BatchInfo]):
 
 
 
-def calculate_stats(custom_db_path) -> Dipl_StatsList:
+def calculate_stats(custom_db_path: str = None) -> Dipl_StatsList:
   query = f"""
       SELECT
         user_count,

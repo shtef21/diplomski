@@ -5,16 +5,17 @@ import time
 import os
 from pprint import pprint
 
-from libs.kafka.json.producer import Dipl_JsonProducer
-from libs.kafka.json.consumer import Dipl_JsonConsumer
+from libs.kafka.json.json_producer import Dipl_JsonProducer
+from libs.kafka.json.json_consumer import Dipl_JsonConsumer
 from libs.helpers.mock_generator import Dipl_MockGenerator
-from libs.helpers.proj_config import ARGS, db_tablename, default_db_path
-from libs.models.message import Dipl_JsonBatch
+from libs.helpers.proj_config import ArgReader, db_tablename, default_db_path
 from libs.kafka.proto.proto_consumer import Dipl_ProtoConsumer
 from libs.kafka.proto.proto_producer import Dipl_ProtoProducer
 from libs.test_runner import monitor_tests, run_all_tests, show_stats
 from libs.helpers import db
 
+
+ARGS = ArgReader()
 
 print('Run configuration:')
 pprint(ARGS.__dict__)
@@ -27,7 +28,7 @@ mock_generator = Dipl_MockGenerator(
 )
 
 # Initialize DB if needed
-if ARGS.reset_db:
+if ARGS.reset_db or len(db.calculate_stats().data) == 0:
   if os.path.exists(default_db_path):
     os.remove(default_db_path)
   db.create_stats_table()
