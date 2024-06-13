@@ -42,7 +42,12 @@ if ARGS.reset_db or len(db.calculate_stats().data) == 0:
 if ARGS.is_produce:
   j_producer = Dipl_JsonProducer(ARGS.bootstrap_server)
   p_producer = Dipl_ProtoProducer(ARGS.bootstrap_server, ARGS.schema_registry_url)
-  run_all_tests(j_producer, p_producer, mock_generator)
+  run_all_tests(
+    j_producer,
+    p_producer,
+    mock_generator,
+    ARGS.is_dry_run
+  )
 
 # Start JSON consumer
 elif ARGS.is_json_consumer:

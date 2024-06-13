@@ -2,8 +2,10 @@ import time
 from confluent_kafka import Producer
 from colorama import Fore, Style, Back
 from tqdm import tqdm
+from typing import Callable, Any
 
 from ...models.message import Dipl_JsonBatch
+from ...models.measurement import Dipl_ProducerMeasurement
 from ...helpers.proj_config import default_prod_sleep, topic_name_json, max_msg_size
 
 
@@ -26,18 +28,31 @@ class Dipl_JsonProducer:
     )
 
 
-  def run(self, produce_callback, sleep_amount=None):
+  def run(
+    self,
+    produce_callback: Callable[[Dipl_ProducerMeasurement, Any, Any], None],
+    sleep_amount: float = None
+  ):
 
     producer = Producer(self.config)
     self.log(f'Producing {len(self.produce_queue)} messages found in produce_queue...')
 
     for idx in tqdm(range(len(self.produce_queue))):
       message_batch = self.produce_queue[idx]
+      msmt = Dipl_ProducerMeasurement(
+        message_batch.id,
+        'json',
+        message_batch.spawn_count
+      )
+      msmt.ts0_generated = time.time()
+      serialized_value = message_batch.serialize()
+      msmt.ts1_serialized = time.time()
+
       producer.produce(
         topic = topic_name_json,
         key = message_batch.id_bytes,
-        value = message_batch.data_json,
-        callback = produce_callback,
+        value = serialized_value,
+        callback = lambda err, msg: produce_callback(msmt, err, msg),
       )
 
       producer.flush()  # produce it synchronously

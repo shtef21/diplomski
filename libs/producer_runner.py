@@ -1,7 +1,10 @@
 
+import time
+
 from .helpers.mock_generator import Dipl_MockGenerator
 from .helpers.proj_config import default_prod_sleep
 from .models.message import Dipl_JsonBatch, Dipl_ProtoBatch
+from .models.measurement import Dipl_ProducerMeasurement
 from .kafka.json.json_producer import Dipl_JsonProducer
 from .kafka.proto.proto_producer import Dipl_ProtoProducer
 
@@ -41,25 +44,37 @@ def create_test_run(
 def run_all_tests(
   j_prod: Dipl_JsonProducer,
   p_prod: Dipl_ProtoProducer,
-  mock_generator: Dipl_MockGenerator
+  mock_generator: Dipl_MockGenerator,
+  is_dry_run: bool,
 ):
   reps = 50
+  measurements: list[Dipl_ProducerMeasurement] = []
+  total_produced_count = 0
 
-  def callback(prod: Dipl_JsonProducer | Dipl_ProtoProducer, err, msg):
+  def callback(
+    prod: Dipl_JsonProducer | Dipl_ProtoProducer,
+    msmt: Dipl_ProducerMeasurement,
+    err,
+    msg
+  ):
     if err is not None:
       prod.log(f'Failed to deliver message: {msg}: {err}')
     else:
-      size_kb = len(msg) / 1024
-      # prod.log(f'Produced message {bytes_to_int(msg.key())} of size {round(size_kb, 2)}kB')
+      msmt.ts2_produced = time.time()
+      msmt.produced_size_kb = len(msg) / 1024
+      measurements.append(msmt)
+
 
   def run_test(prod, test_size, batch_class):
+    nonlocal total_produced_count
     prod.produce_queue = []
     for test_case in create_test_run(test_size, mock_generator, reps, batch_class):
       prod.produce_queue.append(test_case)
     prod.run(
-      produce_callback=lambda err, msg: callback(prod, err, msg),
+      produce_callback=lambda msmt, err, msg: callback(prod, msmt, err, msg),
       sleep_amount=default_prod_sleep
     )
+    total_produced_count += len(prod.produce_queue)
 
   j_prod.log('Running a small test.')
   run_test(j_prod, 'small', Dipl_JsonBatch)
@@ -81,5 +96,22 @@ def run_all_tests(
   p_prod.log('Running an extra large test.')
   run_test(p_prod, 'extra_large', Dipl_ProtoBatch)
 
-  print('All tests done.')
+  wait_repetition = 5
+  while wait_repetition > 0 and len(measurements) != total_produced_count:
+    print('Waiting for measurements...')
+    time.sleep(5.0)
+    wait_repetition -= 1
+
+  print('Done producing and measuring.')
+
+  if len(measurements) != total_produced_count:
+    missing_count = total_produced_count - len(measurements)
+    print(f'Missing {missing_count} measurements.')
+
+  if is_dry_run:
+    print(f'Ignoring {len(measurements)} measurements.')
+  else:
+    print(f'Saving {len(measurements)} measurements.')
+    # insert measurements to db...
+
 

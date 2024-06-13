@@ -1,10 +1,11 @@
 import time
-from confluent_kafka import Consumer, KafkaError, KafkaException
+from confluent_kafka import Consumer, KafkaError, KafkaException, TIMESTAMP_CREATE_TIME
 from colorama import Fore, Style, Back
 
 from confluent_kafka.serialization import SerializationContext, MessageField
 from confluent_kafka.schema_registry.protobuf import ProtobufDeserializer
 
+from ...helpers.utils import bytes_to_int
 from ...helpers.proj_config import consumer_group_proto, max_msg_size, topic_name_proto
 from ...models.measurement import Dipl_ConsumerMeasurement
 from .protoc_out import user_pb2
@@ -68,12 +69,22 @@ class Dipl_ProtoConsumer:
 
         else:
           if msg.topic() == topic_name_proto:
+            batch_id = bytes_to_int(msg.key())
+            msmt = Dipl_ConsumerMeasurement(batch_id)
+            msmt.consumed_size_kb = len(msg) / 1024
+
+            ts_type, ts_milliseconds = msg.timestamp()
+            if ts_type == TIMESTAMP_CREATE_TIME:
+              msmt.ts3_created = ts_milliseconds / 1000
+
+            msmt.ts4_consumed = time.time()
+
             proto_msg: Dipl_UserListPb2_Wrapper = self.deserialize(
               msg.value(),
               SerializationContext(topic_name_proto, MessageField.VALUE)
             )
-            info = Dipl_ConsumerMeasurement(msg, 'proto', len(proto_msg.users))
-            consume_callback(info)
+            msmt.ts5_deserialized = time.time()
+            consume_callback(msmt)
           else:
             # Only happens if topics_to_consume has many topics
             self.log(f'Non-standard message received:')

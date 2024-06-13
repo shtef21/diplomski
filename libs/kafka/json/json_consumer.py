@@ -1,8 +1,9 @@
 import time
-from confluent_kafka import Consumer, KafkaError, KafkaException
+from confluent_kafka import Consumer, KafkaError, KafkaException, TIMESTAMP_CREATE_TIME
 from colorama import Fore, Style, Back
+from typing import Callable
 
-from libs.helpers.utils import json_to_data
+from ...helpers.utils import bytes_to_int, json_to_data
 from ...helpers.proj_config import consumer_group_json, max_msg_size, topic_name_json, topic_name_proto
 from ...models.measurement import Dipl_ConsumerMeasurement
 
@@ -27,7 +28,7 @@ class Dipl_JsonConsumer:
     )
 
 
-  def run(self, consume_callback):
+  def run(self, consume_callback: Callable[[Dipl_ConsumerMeasurement], None]):
 
     topics_to_consume = [ topic_name_json ]
     try:
@@ -54,9 +55,19 @@ class Dipl_JsonConsumer:
 
         else:
           if msg.topic() == topic_name_json:
+            batch_id = bytes_to_int(msg.key())
+            msmt = Dipl_ConsumerMeasurement(batch_id)
+            msmt.consumed_size_kb = len(msg) / 1024
+
+            ts_type, ts_milliseconds = msg.timestamp()
+            if ts_type == TIMESTAMP_CREATE_TIME:
+              msmt.ts3_created = ts_milliseconds / 1000
+
+            msmt.ts4_consumed = time.time()
+
             data = json_to_data(msg.value().decode('utf-8'))
-            info = Dipl_ConsumerMeasurement(msg, 'json', len(data))
-            consume_callback(info)
+            msmt.ts5_deserialized = time.time()
+            consume_callback(msmt)
           else:
             # Only happens if topics_to_consume has many topics
             self.log(f'Non-standard message received:')

@@ -6,7 +6,7 @@ from typing import Callable, Any
 from libs.models.stats import Dipl_StatsList
 
 
-from ..models.measurement import Dipl_ConsumerMeasurement
+from ..models.measurement import Dipl_ConsumerMeasurement, Dipl_ProducerMeasurement
 from .proj_config import default_db_path, db_tablename
 from pprint import pprint
 
@@ -45,34 +45,67 @@ def create_stats_table():
   def _create_table(cursor: sqlite3.Cursor):
     cursor.execute(f"""
       CREATE TABLE IF NOT EXISTS {db_tablename} (
-        id INTEGER PRIMARY KEY,
-        user_count INTEGER,
-        size_kb REAL,
-        ts_created REAL,
-        ts_received REAL,
-        consume_duration REAL,
-        type TEXT
+        batch_id INTEGER PRIMARY KEY,
+        type TEXT NOT NULL,
+        user_count INTEGER NOT NULL,
+        produced_size_kb REAL NOT NULL,
+        ts0_generated REAL NOT NULL,
+        ts1_serialized REAL NOT NULL,
+        ts2_produced REAL NOT NULL,
+        ts3_created REAL,
+        ts4_consumed REAL,
+        ts5_deserialized REAL,
+        consumed_size_kb REAL,
+        serialize_duration REAL GENERATED ALWAYS AS (ts1_serialized - ts0_generated) VIRTUAL,
+        produce_duration REAL GENERATED ALWAYS AS (ts2_produced - ts1_serialized) VIRTUAL,
+        produced_response_duration REAL GENERATED ALWAYS AS (ts3_created - ts2_produced) VIRTUAL,
+        consume_duration REAL GENERATED ALWAYS AS (ts4_consumed - ts3_created) VIRTUAL
+        deserialize_duration REAL GENERATED ALWAYS AS (ts5_deserialized - ts4_consumed) VIRTUAL
       );
     """)
   __operate_on_db(_create_table)
 
 
-def insert_results(results: list[Dipl_ConsumerMeasurement]):
-  def _insert_results(cursor: sqlite3.Cursor):
-    for res in results:
+def insert_producer_msmts(msmts: list[Dipl_ProducerMeasurement]):
+  def _insert_prod_msmts(cursor: sqlite3.Cursor):
+    for m in msmts:
       cursor.execute(f"""
-        INSERT INTO {db_tablename}
+        INSERT INTO {db_tablename} (
+          batch_id,
+          type,
+          user_count,
+          produced_size_kb,
+          ts0_generated,
+          ts1_serialized,
+          ts2_produced
+        )
         VALUES (
-          {res.id},
-          {res.user_count},
-          {res.size_kb},
-          {res.ts_created},
-          {res.ts_received},
-          {res.consume_duration},
-          '{res.type}'
+          {m.batch_id},
+          '{m.type}',
+          {m.user_count},
+          {m.produced_size_kb},
+          {m.ts0_generated},
+          {m.ts1_serialized},
+          {m.ts2_produced}
         );
       """)
-  __operate_on_db(_insert_results)
+  __operate_on_db(_insert_prod_msmts)
+
+
+def update_consumer_msmts(msmts: list[Dipl_ConsumerMeasurement]):
+  def _update_msmts(cursor: sqlite3.Cursor):
+    for m in msmts:
+      cursor.execute(f"""
+        UPDATE {db_tablename}
+        SET
+          ts3_created = {m.ts3_created},
+          ts4_consumed = {m.ts4_consumed},
+          ts5_deserialized = {m.ts5_deserialized},
+          consumed_size_kb = {m.consumed_size_kb}
+        WHERE
+          batch_id = {m.batch_id};
+      """)
+  __operate_on_db(_update_msmts)
 
 
 

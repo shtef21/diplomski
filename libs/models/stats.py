@@ -16,6 +16,5 @@ class Dipl_StatsRow():
     self.consume_duration_variance = r[3]
     self.size_kb_avg = r[4]
     self.user_count_str = str(r[0]).replace('0000', '0K').replace('000', 'K')
-    self.user_count_unique = self.type[0] + ' ' + self.user_count_str
     self.plt_bar_color = 'blue' if self.type == 'json' else 'red'
     self.plt_bar_width = 0.5 if self.type == 'json' else 0.6

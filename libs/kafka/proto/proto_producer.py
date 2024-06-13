@@ -2,16 +2,18 @@ import time
 from confluent_kafka import Producer
 from colorama import Fore, Style, Back
 from tqdm import tqdm
+from typing import Callable, Any
 
 from confluent_kafka.serialization import SerializationContext, MessageField
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.protobuf import ProtobufSerializer
 
+
 from ...helpers.proj_config import default_prod_sleep, topic_name_proto, max_msg_size
 from ...models.message import Dipl_JsonBatch, Dipl_ProtoBatch
+from ...models.measurement import Dipl_ProducerMeasurement
 
 from .protoc_out import user_pb2
-from .user_pb2_wrapper import Dipl_UserListPb2_Wrapper
 
 
 class Dipl_ProtoProducer:
@@ -24,7 +26,7 @@ class Dipl_ProtoProducer:
       'message.max.bytes': max_msg_size,
     }
     sr_client = SchemaRegistryClient({ 'url': schema_registry_url })
-    self.serialize = ProtobufSerializer(
+    self.serializer = ProtobufSerializer(
       msg_type=user_pb2.UserList,
       schema_registry_client=sr_client,
       conf = {
@@ -35,7 +37,7 @@ class Dipl_ProtoProducer:
         'use.deprecated.format': False,
       }
     )
-    self.ser_context = SerializationContext(topic_name_proto, MessageField.VALUE)
+    self.sr_context = SerializationContext(topic_name_proto, MessageField.VALUE)
 
   
   # log function
@@ -47,20 +49,31 @@ class Dipl_ProtoProducer:
     )
 
 
-  def run(self, produce_callback, sleep_amount=None):
+  def run(
+    self,
+    produce_callback: Callable[[Dipl_ProducerMeasurement, Any, Any], None],
+    sleep_amount: float = None
+  ):
 
     producer = Producer(self.config)
     self.log(f'Producing {len(self.produce_queue)} messages found in produce_queue...')
 
     for idx in tqdm(range(len(self.produce_queue))):
       message_batch = self.produce_queue[idx]
-      serialized_value = self.serialize(message_batch.data_proto, self.ser_context)
+      msmt = Dipl_ProducerMeasurement(
+        message_batch.id,
+        'proto',
+        message_batch.spawn_count
+      )
+      msmt.ts0_generated = time.time()
+      serialized_value = message_batch.serialize(self.serializer, self.sr_context)
+      msmt.ts1_serialized = time.time()
 
       producer.produce(
         topic = topic_name_proto,
         key = message_batch.id_bytes,
         value = serialized_value,
-        callback = produce_callback,
+        callback = lambda err, msg: produce_callback(msmt, err, msg),
       )
 
       producer.flush()  # produce it synchronously
