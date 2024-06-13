@@ -11,7 +11,7 @@ from libs.helpers.mock_generator import Dipl_MockGenerator
 from libs.helpers.proj_config import ArgReader, db_tablename, default_db_path
 from libs.kafka.proto.proto_consumer import Dipl_ProtoConsumer
 from libs.kafka.proto.proto_producer import Dipl_ProtoProducer
-from libs.test_runner import monitor_tests, run_all_tests, show_stats
+from libs.producer_runner import monitor_tests, run_all_tests, show_stats
 from libs.helpers import db
 
 
