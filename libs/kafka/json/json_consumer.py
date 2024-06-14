@@ -30,7 +30,7 @@ class Dipl_JsonConsumer:
 
   def run(self, consume_callback: Callable[[Dipl_ConsumerMeasurement], None]):
 
-    topics_to_consume = [ topic_name_json, topic_name_ctrl ]
+    topics_to_consume = [ topic_name_json ]
     try:
       consumer = Consumer(self.config)
       consumer.subscribe(topics_to_consume)
