@@ -61,10 +61,13 @@ def initialize_database():
         consumed_size_kb REAL,
         serialize_duration REAL GENERATED ALWAYS AS (ts1_serialized - ts0_generated) VIRTUAL,
         produce_duration REAL GENERATED ALWAYS AS (ts2_produced - ts1_serialized) VIRTUAL,
-        produced_response_duration REAL GENERATED ALWAYS AS (ts3_created - ts2_produced) VIRTUAL,
         consume_duration REAL GENERATED ALWAYS AS (ts4_consumed - ts3_created) VIRTUAL,
         deserialize_duration REAL GENERATED ALWAYS AS (ts5_deserialized - ts4_consumed) VIRTUAL,
-        throughput_kbps REAL GENERATED ALWAYS AS ((ts4_consumed - ts3_created) / consumed_size_kb)
+        throughput_kbps REAL GENERATED ALWAYS AS (
+          CASE WHEN ts4_consumed - ts3_created > 0
+          THEN (consumed_size_kb / (ts4_consumed - ts3_created))
+          ELSE 0 END
+        ) VIRTUAL
       );
     """)
   is_ok = __operate_on_db(_create_table)

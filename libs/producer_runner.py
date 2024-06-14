@@ -1,6 +1,7 @@
 
 import time
 
+from .helpers import db
 from .helpers.mock_generator import Dipl_MockGenerator
 from .helpers.proj_config import default_prod_sleep
 from .models.message import Dipl_JsonBatch, Dipl_ProtoBatch
@@ -70,11 +71,11 @@ def run_all_tests(
     prod.produce_queue = []
     for test_case in create_test_run(test_size, mock_generator, reps, batch_class):
       prod.produce_queue.append(test_case)
+    n_produced += len(prod.produce_queue)
     prod.run(
       produce_callback=lambda msmt, err, msg: callback(prod, msmt, err, msg),
       sleep_amount=default_prod_sleep
     )
-    n_produced += len(prod.produce_queue)
 
   j_prod.log('Running a small test.')
   run_test(j_prod, 'small', Dipl_JsonBatch)
@@ -112,6 +113,6 @@ def run_all_tests(
     print(f'Ignoring {len(measurements)} measurements.')
   else:
     print(f'Saving {len(measurements)} measurements.')
-    # insert measurements to db...
+    db.insert_producer_msmts(measurements)
 
 
