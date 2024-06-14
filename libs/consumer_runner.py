@@ -11,17 +11,18 @@ def monitor_tests(cons: Dipl_JsonConsumer | Dipl_ProtoConsumer, dry_run: bool = 
   consumer_type = 'JSON' if type(cons) == Dipl_JsonConsumer else 'PROTO'
   print(f'Started {consumer_type} test monitoring')
 
-  results: list[Dipl_ConsumerMeasurement] = []
-  def consume_callback(msg: Dipl_ConsumerMeasurement):
-    cons.log(f'Consumed msg {msg.batch_id} of size {round(msg.consumed_size_kb, 2)}kB in {round(msg.consume_duration * 1000)}ms')
-    results.append(msg)
-  cons.run(
-    consume_callback
-  )
+  measurements: list[Dipl_ConsumerMeasurement] = []
+
+  def consume_callback(msmt: Dipl_ConsumerMeasurement):
+    consume_dur = msmt.ts4_consumed - msmt.ts3_created
+    cons.log(f'Consumed msg {msmt.batch_id} of size {round(msmt.consumed_size_kb, 2)}kB in {round(consume_dur * 1000)}ms')
+    measurements.append(msmt)
+
+  cons.run(consume_callback)
 
   if not dry_run:
-    db.update_consumer_msmts(results)
-    cons.log(f'Inserted {len(results)} rows of {consumer_type} results.')
+    db.update_consumer_msmts(measurements)
+    cons.log(f'Inserted {len(measurements)} rows of {consumer_type} results.')
   else:
-    cons.log(f'Dry run specified. Ignoring {len(results)} rows {consumer_type} results.')
+    cons.log(f'Dry run specified. Ignoring {len(measurements)} rows {consumer_type} results.')
 

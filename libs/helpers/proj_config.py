@@ -31,13 +31,6 @@ class ArgReader():
       action='store_true',
       help='If sent, mocked data will be generated even if it already exists'
     )
-    # reset_db
-    arg_parser.add_argument(
-      '--reset-db',
-      dest='reset_db',
-      action='store_true',
-      help='If sent, DB file will be deleted'
-    )
     # show_logs
     arg_parser.add_argument(
       '--show-logs',
@@ -111,7 +104,6 @@ class ArgReader():
     # Parse and save args to enable linting
     a = arg_parser.parse_args()
     self.reset_mocks = a.reset_mocks
-    self.reset_db = a.reset_db
     self.show_logs = a.show_logs
     self.bootstrap_server = a.bootstrap_server
     self.stats_path = a.stats_path

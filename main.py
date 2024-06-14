@@ -30,12 +30,19 @@ mock_generator = Dipl_MockGenerator(
   show_logs=ARGS.show_logs
 )
 
-# Initialize DB if needed
-if ARGS.reset_db or len(db.calculate_stats().data) == 0:
+# Initialize DB
+db_prompt = 'Delete previous DB (Y/n)?'
+if ARGS.is_produce and not input(db_prompt).lower().startswith('n'):
   if os.path.exists(default_db_path):
+    print('Deleting previous DB...')
     os.remove(default_db_path)
-  db.create_stats_table()
-  print(f'DB initialized; table {db_tablename}')
+  
+  initialized = db.initialize_database()
+  if initialized:
+    print(f'DB initialized.')
+  else:
+    print('Something is wrong with the database. Exiting...')
+    exit()
 
 
 # Start JSON producer

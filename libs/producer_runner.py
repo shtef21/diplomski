@@ -49,7 +49,7 @@ def run_all_tests(
 ):
   reps = 50
   measurements: list[Dipl_ProducerMeasurement] = []
-  total_produced_count = 0
+  n_produced = 0
 
   def callback(
     prod: Dipl_JsonProducer | Dipl_ProtoProducer,
@@ -66,7 +66,7 @@ def run_all_tests(
 
 
   def run_test(prod, test_size, batch_class):
-    nonlocal total_produced_count
+    nonlocal n_produced
     prod.produce_queue = []
     for test_case in create_test_run(test_size, mock_generator, reps, batch_class):
       prod.produce_queue.append(test_case)
@@ -74,7 +74,7 @@ def run_all_tests(
       produce_callback=lambda msmt, err, msg: callback(prod, msmt, err, msg),
       sleep_amount=default_prod_sleep
     )
-    total_produced_count += len(prod.produce_queue)
+    n_produced += len(prod.produce_queue)
 
   j_prod.log('Running a small test.')
   run_test(j_prod, 'small', Dipl_JsonBatch)
@@ -97,15 +97,15 @@ def run_all_tests(
   run_test(p_prod, 'extra_large', Dipl_ProtoBatch)
 
   wait_repetition = 5
-  while wait_repetition > 0 and len(measurements) != total_produced_count:
-    print('Waiting for measurements...')
+  while wait_repetition > 0 and len(measurements) != n_produced:
+    print(f'Waiting for measurements ({len(measurements)/{n_produced}})...')
     time.sleep(5.0)
     wait_repetition -= 1
 
   print('Done producing and measuring.')
 
-  if len(measurements) != total_produced_count:
-    missing_count = total_produced_count - len(measurements)
+  if len(measurements) != n_produced:
+    missing_count = n_produced - len(measurements)
     print(f'Missing {missing_count} measurements.')
 
   if is_dry_run:

@@ -15,6 +15,7 @@ def __operate_on_db(what_to_do: Callable[[sqlite3.Cursor], None], custom_db: str
 
   if custom_db and os.path.exists(custom_db) == False:
     raise Exception(f"Cannot find DB: {custom_db}")
+  successful_operation = False
   
   try:
     conn_db = default_db_path if not custom_db else custom_db
@@ -31,6 +32,7 @@ def __operate_on_db(what_to_do: Callable[[sqlite3.Cursor], None], custom_db: str
 
     # Close the cursor
     cursor.close()
+    successful_operation = True
 
   except sqlite3.Error as error:
     print('sqlite3.Error occurred -', error)
@@ -39,9 +41,10 @@ def __operate_on_db(what_to_do: Callable[[sqlite3.Cursor], None], custom_db: str
   finally:
     if sqlite_conn:
       sqlite_conn.close()
+  return successful_operation
 
 
-def create_stats_table():
+def initialize_database():
   def _create_table(cursor: sqlite3.Cursor):
     cursor.execute(f"""
       CREATE TABLE IF NOT EXISTS {db_tablename} (
@@ -59,11 +62,13 @@ def create_stats_table():
         serialize_duration REAL GENERATED ALWAYS AS (ts1_serialized - ts0_generated) VIRTUAL,
         produce_duration REAL GENERATED ALWAYS AS (ts2_produced - ts1_serialized) VIRTUAL,
         produced_response_duration REAL GENERATED ALWAYS AS (ts3_created - ts2_produced) VIRTUAL,
-        consume_duration REAL GENERATED ALWAYS AS (ts4_consumed - ts3_created) VIRTUAL
-        deserialize_duration REAL GENERATED ALWAYS AS (ts5_deserialized - ts4_consumed) VIRTUAL
+        consume_duration REAL GENERATED ALWAYS AS (ts4_consumed - ts3_created) VIRTUAL,
+        deserialize_duration REAL GENERATED ALWAYS AS (ts5_deserialized - ts4_consumed) VIRTUAL,
+        throughput_kbps REAL GENERATED ALWAYS AS ((ts4_consumed - ts3_created) / consumed_size_kb)
       );
     """)
-  __operate_on_db(_create_table)
+  is_ok = __operate_on_db(_create_table)
+  return is_ok
 
 
 def insert_producer_msmts(msmts: list[Dipl_ProducerMeasurement]):
