@@ -1,14 +1,22 @@
 
 import os
 import sqlite3
-from typing import Callable, Any
+from statistics import variance
+from typing import Callable
 
-from libs.models.stats import Dipl_StatsList
-
-
-from ..models.measurement import Dipl_ConsumerMeasurement, Dipl_ProducerMeasurement
 from .proj_config import default_db_path, db_tablename
-from pprint import pprint
+from ..models.measurement import Dipl_ConsumerMeasurement, Dipl_ProducerMeasurement
+from ..models.stats import Dipl_StatsList
+
+
+VARIANCE = 'dipl_variance'
+
+def define_custom_db_functions(conn: sqlite3.Connection):
+  def __variance(values):
+    if len(values) > 1:
+      return variance(values)
+    return 0.0
+  conn.create_aggregate(VARIANCE, 1, __variance)
 
 
 def __operate_on_db(what_to_do: Callable[[sqlite3.Cursor], None], custom_db: str = None):
@@ -22,6 +30,11 @@ def __operate_on_db(what_to_do: Callable[[sqlite3.Cursor], None], custom_db: str
 
     # Connect to DB and create cursor
     sqlite_conn = sqlite3.connect(conn_db)
+
+    # Set helper functions
+    define_custom_db_functions(sqlite_conn)
+
+    # Fetch cursor
     cursor = sqlite_conn.cursor()
 
     # Give cursor to the lambda
@@ -59,14 +72,19 @@ def initialize_database():
         ts4_consumed REAL,
         ts5_deserialized REAL,
         consumed_size_kb REAL,
-        serialize_duration REAL GENERATED ALWAYS AS (ts1_serialized - ts0_generated) VIRTUAL,
-        produce_duration REAL GENERATED ALWAYS AS (ts2_produced - ts1_serialized) VIRTUAL,
-        consume_duration REAL GENERATED ALWAYS AS (ts4_consumed - ts3_created) VIRTUAL,
-        deserialize_duration REAL GENERATED ALWAYS AS (ts5_deserialized - ts4_consumed) VIRTUAL,
-        throughput_kbps REAL GENERATED ALWAYS AS (
-          CASE WHEN ts4_consumed - ts3_created > 0
-          THEN (consumed_size_kb / (ts4_consumed - ts3_created))
-          ELSE 0 END
+        serialize_duration REAL GENERATED ALWAYS
+          AS (ts1_serialized - ts0_generated) VIRTUAL,
+        produce_duration REAL GENERATED ALWAYS
+          AS (ts2_produced - ts1_serialized) VIRTUAL,
+        consume_duration REAL GENERATED ALWAYS
+          AS (ts4_consumed - ts3_created) VIRTUAL,
+        deserialize_duration REAL GENERATED ALWAYS
+          AS (ts5_deserialized - ts4_consumed) VIRTUAL,
+        throughput_kbps REAL GENERATED ALWAYS
+          AS (
+            CASE WHEN ts4_consumed - ts3_created > 0
+            THEN (consumed_size_kb / (ts4_consumed - ts3_created))
+            ELSE 0 END
         ) VIRTUAL
       );
     """)
@@ -116,19 +134,33 @@ def update_consumer_msmts(msmts: list[Dipl_ConsumerMeasurement]):
   __operate_on_db(_update_msmts)
 
 
-
 def calculate_stats(custom_db_path: str = None) -> Dipl_StatsList:
   query = f"""
       SELECT
         user_count,
         type,
-        AVG(consume_duration) as consume_duration_average,
-        SUM(
-            (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
-            * (consume_duration-(SELECT AVG(consume_duration) FROM {db_tablename}))
-          ) / (COUNT(consume_duration)-1)
+        AVG(serialize_duration)
+          AS serialize_duration_average,
+        {VARIANCE}(serialize_duration)
+          AS serialize_duration_variance,
+        AVG(produce_duration)
+          AS produce_duration_average,
+        {VARIANCE}(produce_duration)
+          AS produce_duration_variance,
+        AVG(consume_duration)
+          AS consume_duration_average,
+        {VARIANCE}(consume_duration)
           AS consume_duration_variance,
-        AVG(size_kb) size_kb_avg
+        AVG(deserialize_duration)
+          AS deserialize_duration_average,
+        {VARIANCE}(deserialize_duration)
+          AS deserialize_duration_variance,
+        AVG(produced_size_kb)
+          AS produced_size_kb_avg,
+        AVG(consumed_size_kb)
+          AS consumed_size_kb_avg,
+        AVG(throughput_kbps)
+          AS throughput_kbps_avg
       FROM {db_tablename}
       GROUP BY user_count, type
       ORDER BY user_count, type
@@ -153,4 +185,3 @@ def show_db_version():
 
   print(f'> SQLite version is {result[0]}')
   __operate_on_db(_show_version)
-

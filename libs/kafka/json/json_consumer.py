@@ -54,13 +54,7 @@ class Dipl_JsonConsumer:
             raise KafkaException(msg.error())
 
         else:
-          if msg.topic() == topic_name_ctrl:
-            ctrl_msg = msg.value().decode('utf-8')
-            self.log(f'Received control message "{ctrl_msg}"')
-            if ctrl_msg == Dipl_Control.PROTO_END:
-              self.active = False
-              
-          elif msg.topic() == topic_name_json:
+          if msg.topic() == topic_name_json:
             batch_id = bytes_to_int(msg.key())
             msmt = Dipl_ConsumerMeasurement(batch_id)
             msmt.consumed_size_kb = len(msg) / 1024
