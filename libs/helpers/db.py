@@ -9,16 +9,6 @@ from ..models.measurement import Dipl_ConsumerMeasurement, Dipl_ProducerMeasurem
 from ..models.stats import Dipl_StatsList
 
 
-VARIANCE = 'dipl_variance'
-
-def define_custom_db_functions(conn: sqlite3.Connection):
-  def __variance(values):
-    if len(values) > 1:
-      return variance(values)
-    return 0.0
-  conn.create_aggregate(VARIANCE, 1, __variance)
-
-
 def __operate_on_db(what_to_do: Callable[[sqlite3.Cursor], None], custom_db: str = None):
 
   if custom_db and os.path.exists(custom_db) == False:
@@ -30,9 +20,6 @@ def __operate_on_db(what_to_do: Callable[[sqlite3.Cursor], None], custom_db: str
 
     # Connect to DB and create cursor
     sqlite_conn = sqlite3.connect(conn_db)
-
-    # Set helper functions
-    define_custom_db_functions(sqlite_conn)
 
     # Fetch cursor
     cursor = sqlite_conn.cursor()
@@ -139,22 +126,20 @@ def calculate_stats(custom_db_path: str = None) -> Dipl_StatsList:
       SELECT
         user_count,
         type,
+        COUNT(*)
+          AS repetition_count,
         AVG(serialize_duration)
-          AS serialize_duration_average,
-        {VARIANCE}(serialize_duration)
-          AS serialize_duration_variance,
+          AS serialize_duration_avg,
+        SUM(serialize_duration)
+          AS serialize_duration_sum,
         AVG(produce_duration)
-          AS produce_duration_average,
-        {VARIANCE}(produce_duration)
-          AS produce_duration_variance,
+          AS produce_duration_avg,
         AVG(consume_duration)
-          AS consume_duration_average,
-        {VARIANCE}(consume_duration)
-          AS consume_duration_variance,
+          AS consume_duration_avg,
         AVG(deserialize_duration)
-          AS deserialize_duration_average,
-        {VARIANCE}(deserialize_duration)
-          AS deserialize_duration_variance,
+          AS deserialize_duration_avg,
+        SUM(deserialize_duration)
+          AS deserialize_duration_sum,
         AVG(produced_size_kb)
           AS produced_size_kb_avg,
         AVG(consumed_size_kb)
@@ -163,15 +148,17 @@ def calculate_stats(custom_db_path: str = None) -> Dipl_StatsList:
           AS throughput_kbps_avg
       FROM {db_tablename}
       GROUP BY user_count, type
-      ORDER BY user_count, type
+      ORDER BY user_count, type;
   """
   query_results = []
 
   def _get_results(cursor: sqlite3.Cursor):
     nonlocal query_results
+    cursor.row_factory = sqlite3.Row  # This enables getting value by column name
     cursor.execute(query)
     query_results = cursor.fetchall()
   __operate_on_db(_get_results, custom_db_path)
+
   return Dipl_StatsList(query_results)
 
 

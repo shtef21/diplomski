@@ -21,24 +21,26 @@ def show_stats(stats_path: str):
   # TODO: somehow display variance in durations? with opacity? with many bars?
 
   # Make plots
-  fig, axes = plt.subplots(2, 1, figsize=(16, 9))
+  fig, axes = plt.subplots(2, 2, figsize=(15, 8))
   fig.suptitle('JSON (blue) vs PROTO (red)')
 
   # Unpack plots and set grids
-  plt_size, plt_duration = axes.flatten()
-  plt_size.grid()
-  plt_duration.grid()
+  plt_1, plt_2, plt_3, plt_4 = axes.flatten()
+  plt_1.grid()
+  plt_2.grid()
+  plt_3.grid()
+  plt_4.grid()
 
 
   def _set_plot(
     plot,
-    data: Dipl_StatsList,
+    stats_list: Dipl_StatsList,
     ylabel: str,
     get_val: Callable[[Dipl_StatsRow], Any]
   ):
-    for stats in data:
+    for stats in stats_list.data:
       # Show bar
-      plot.set_xlabel('Objects in message')
+      plot.set_xlabel(f'Objects in message (n={stats_list.messages_per_test})')
       plot.set_ylabel(ylabel)
 
       bar = plot.bar(
@@ -54,25 +56,38 @@ def show_stats(stats_path: str):
         plot.text(
           bar.get_x() + bar.get_width() / 2,
           height,
-          round(height),
+          f'{height:.2f}' if height < 10 else round(height),
           ha='center',
           va='bottom'
         )
 
   # Show plot comparing message sizes
   _set_plot(
-    plt_size,
-    stats_list.data,
-    'Message size (kB)',
-    lambda stats: stats.size_kb_avg
+    plt_1,
+    stats_list,
+    'Average message size (kB)',
+    lambda stats: stats.consumed_size_kb_avg
   )
 
   # Show plot comparing consume durations
   _set_plot(
-    plt_duration,
-    stats_list.data,
-    'Message consume duration (ms)',
-    lambda stats: stats.consume_duration_avg_ms,
+    plt_2,
+    stats_list,
+    'Average consume duration (ms)',
+    lambda stats: stats.consume_duration_avg,
+  )
+  
+  _set_plot(
+    plt_3,
+    stats_list,
+    f'Sum serialize duration (ms), n={stats_list.messages_per_test}',
+    lambda stats: stats.serialize_duration_sum,
+  )
+  _set_plot(
+    plt_4,
+    stats_list,
+    f'Sum deserialize duration (ms), n={stats_list.messages_per_test}',
+    lambda stats: stats.deserialize_duration_sum,
   )
 
   filename = Path(stats_path).stem
