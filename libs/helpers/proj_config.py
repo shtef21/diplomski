@@ -22,6 +22,8 @@ db_tablename = 'measurements'
 
 # Wrapper which enables linting
 class ArgReader():
+  """Wrapper used to help linter read CLI arguments"""
+
   def __init__(self):
     # Initialize parser
     arg_parser = argparse.ArgumentParser(description="Kafka communication code")
@@ -86,21 +88,36 @@ class ArgReader():
       action='store_true',
       help='If sent, loads up proto consumer'
     )
-    # is_stats
+    # process_msmts
     arg_required_group.add_argument(
-      '--stats',
-      dest='is_stats',
+      '--process-stats',
+      dest='process_stats',
+      action='store_true',
+      help='If sent, only shows stats'
+    )
+    # show_stats
+    arg_required_group.add_argument(
+      '--show-stats',
+      dest='show_stats',
       action='store_true',
       help='If sent, only shows stats'
     )
     
-    # stats_path
+    # db_path
     arg_parser.add_argument(
-      '--stats-path',
-      dest='stats_path',
+      '--db-path',
+      dest='db_path',
       type=str,
       default=default_db_path,
-      help=f'Bootstrap server which holds Kafka brokers (default={default_db_path})'
+      help=f'Path to DB (default={default_db_path})'
+    )
+    # csv_path
+    arg_parser.add_argument(
+      '--csv-path',
+      dest='csv_path',
+      type=str,
+      default=None,
+      help=f'Path to CSV data'
     )
 
     # Parse and save args to enable linting
@@ -108,10 +125,12 @@ class ArgReader():
     self.reset_mocks = a.reset_mocks
     self.show_logs = a.show_logs
     self.bootstrap_server = a.bootstrap_server
-    self.stats_path = a.stats_path
+    self.db_path = a.db_path
+    self.csv_path = a.csv_path
     self.schema_registry_url = a.schema_registry_url
     self.is_dry_run = a.is_dry_run
     self.is_produce = a.is_produce
     self.is_json_consumer = a.is_json_consumer
     self.is_proto_consumer = a.is_proto_consumer
-    self.is_stats = a.is_stats
+    self.process_stats = a.process_stats
+    self.show_stats = a.show_stats

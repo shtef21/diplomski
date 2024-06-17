@@ -1,7 +1,31 @@
 
 import time
 
+
+class Dipl_DbMeasurement:
+  """Measurement as shown in DB"""
+
+  def __init__(self, r):
+    self.batch_id = r['batch_id']
+    self.type = r['type']
+    self.user_count = r['user_count']
+    self.produced_size_kb = r['produced_size_kb']
+    self.ts0_generated = r['ts0_generated']
+    self.ts1_serialized = r['ts1_serialized']
+    self.ts2_produced = r['ts2_produced']
+    self.ts3_created = r['ts3_created']
+    self.ts4_consumed = r['ts4_consumed']
+    self.ts5_deserialized = r['ts5_deserialized']
+    self.consumed_size_kb = r['consumed_size_kb']
+    self.serialize_duration = r['serialize_duration']
+    self.produce_duration = r['produce_duration']
+    self.consume_duration = r['consume_duration']
+    self.deserialize_duration = r['deserialize_duration']
+    self.throughput_kbps = r['throughput_kbps']
+
+
 class Dipl_ProducerMeasurement():
+  """Measurement used for preparing data for db in producers"""
   
   def __init__(self, batch_id, type, user_count):
     # Set initially
@@ -21,6 +45,7 @@ class Dipl_ProducerMeasurement():
 
 
 class Dipl_ConsumerMeasurement():
+  """Measurement used for preparing data for db in consumers"""
 
   def __init__(self, batch_id):
     # Set initially

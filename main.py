@@ -1,5 +1,5 @@
 # Install required libraries:
-#   pip install confluent-kafka protobuf requests colorama tqdm matplotlib
+#   pip install confluent-kafka protobuf requests colorama tqdm matplotlib pandas
 
 import time
 import os
@@ -15,7 +15,7 @@ from libs.helpers import db
 
 from libs.producer_runner import run_all_tests
 from libs.consumer_runner import monitor_tests
-from libs.stats_runner import show_stats
+from libs.stats_runner import process_measurements, show_stats
 
 
 ARGS = ArgReader()
@@ -67,8 +67,12 @@ elif ARGS.is_proto_consumer:
   monitor_tests(consumer, ARGS.is_dry_run)
 
 
+# Make calculations on stats
+if ARGS.process_stats:
+  process_measurements(ARGS.db_path)
+
 # Show stats
-if ARGS.is_stats:
-  show_stats(ARGS.stats_path)
+if ARGS.show_stats:
+  show_stats(ARGS.csv_path)
 
 # TODO: Use 'seaborn' for visualizing data (not matplotlib)?

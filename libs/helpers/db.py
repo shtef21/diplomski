@@ -2,10 +2,10 @@
 import os
 import sqlite3
 from statistics import variance
-from typing import Callable
+from typing import Any, Callable
 
 from .proj_config import default_db_path, db_tablename
-from ..models.measurement import Dipl_ConsumerMeasurement, Dipl_ProducerMeasurement
+from ..models.measurement import Dipl_ConsumerMeasurement, Dipl_DbMeasurement, Dipl_ProducerMeasurement
 from ..models.stats import Dipl_StatsList
 
 
@@ -119,6 +119,19 @@ def update_consumer_msmts(msmts: list[Dipl_ConsumerMeasurement]):
           batch_id = {m.batch_id};
       """)
   __operate_on_db(_update_msmts)
+
+
+def get_measurements(custom_db_path: str = None) -> list[Dipl_DbMeasurement]:
+  query_results = []
+  def _get_results(cursor: sqlite3.Cursor):
+    nonlocal query_results
+    cursor.row_factory = sqlite3.Row  # This enables getting value by column name
+    cursor.execute(f"""
+        SELECT * FROM {db_tablename}
+    """)
+    query_results = cursor.fetchall()
+  __operate_on_db(_get_results, custom_db_path)
+  return [Dipl_DbMeasurement(r) for r in query_results]
 
 
 def calculate_stats(custom_db_path: str = None) -> Dipl_StatsList:
