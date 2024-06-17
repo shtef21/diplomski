@@ -4,7 +4,7 @@ from colorama import Fore, Style, Back
 from typing import Callable
 
 from ...helpers.utils import bytes_to_int, json_to_data
-from ...helpers.proj_config import consumer_group_json, max_msg_size, topic_name_json
+from ...helpers.proj_config import consumer_group_json, max_msg_size, topic_name_json, topic_name_info
 from ...models.measurement import Dipl_ConsumerMeasurement
 
 
@@ -30,7 +30,7 @@ class Dipl_JsonConsumer:
 
   def run(self, consume_callback: Callable[[Dipl_ConsumerMeasurement], None]):
 
-    topics_to_consume = [ topic_name_json ]
+    topics_to_consume = [ topic_name_json, topic_name_info ]
     try:
       consumer = Consumer(self.config)
       consumer.subscribe(topics_to_consume)
@@ -68,6 +68,8 @@ class Dipl_JsonConsumer:
             data = json_to_data(msg.value().decode('utf-8'))
             msmt.ts5_deserialized = time.time()
             consume_callback(msmt)
+          elif msg.topic() == topic_name_info:
+            self.log(f'Received INFO message: {msg.value().decode('utf-8')}')
           else:
             # Only happens if topics_to_consume has many topics
             self.log(f'Non-standard message received:')

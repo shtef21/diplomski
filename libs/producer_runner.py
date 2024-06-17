@@ -48,7 +48,7 @@ def run_all_tests(
   mock_generator: Dipl_MockGenerator,
   is_dry_run: bool,
 ):
-  reps = 50
+  reps = 100
   measurements: list[Dipl_ProducerMeasurement] = []
   n_produced = 0
 
@@ -74,7 +74,7 @@ def run_all_tests(
     n_produced += len(prod.produce_queue)
     prod.run(
       produce_callback=lambda msmt, err, msg: callback(prod, msmt, err, msg),
-      sleep_amount=default_prod_sleep
+      sleep_amount=0.25 if test_size != 'extra_large' else default_prod_sleep
     )
 
   j_prod.log('Running a small test.')

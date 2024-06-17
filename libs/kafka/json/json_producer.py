@@ -6,7 +6,7 @@ from typing import Callable, Any
 
 from ...models.message import Dipl_JsonBatch
 from ...models.measurement import Dipl_ProducerMeasurement
-from ...helpers.proj_config import default_prod_sleep, topic_name_json, max_msg_size
+from ...helpers.proj_config import default_prod_sleep, topic_name_json, topic_name_info, max_msg_size
 
 
 class Dipl_JsonProducer:
@@ -36,6 +36,14 @@ class Dipl_JsonProducer:
 
     producer = Producer(self.config)
     self.log(f'Producing {len(self.produce_queue)} messages found in produce_queue...')
+
+    # Test messages help "warm up" the system
+    for i in range(5):
+      info_msg = f'Test ping. Starting producer in {5 - i} seconds...'
+      producer.produce(topic=topic_name_info, value=info_msg)
+      self.log(f'Produced "{info_msg}"')
+      producer.flush()
+      time.sleep(1.0)
 
     for idx in tqdm(range(len(self.produce_queue))):
       message_batch = self.produce_queue[idx]

@@ -6,7 +6,7 @@ from confluent_kafka.serialization import SerializationContext, MessageField
 from confluent_kafka.schema_registry.protobuf import ProtobufDeserializer
 
 from ...helpers.utils import bytes_to_int
-from ...helpers.proj_config import consumer_group_proto, max_msg_size, topic_name_proto
+from ...helpers.proj_config import consumer_group_proto, max_msg_size, topic_name_proto, topic_name_info
 from ...models.measurement import Dipl_ConsumerMeasurement
 from .protoc_out import user_pb2
 from .user_pb2_wrapper import Dipl_UserListPb2_Wrapper
@@ -44,7 +44,7 @@ class Dipl_ProtoConsumer:
 
   def run(self, consume_callback):
 
-    topics_to_consume = [ topic_name_proto ]
+    topics_to_consume = [ topic_name_proto, topic_name_info ]
     try:
       consumer = Consumer(self.config)
       consumer.subscribe(topics_to_consume)
@@ -85,6 +85,8 @@ class Dipl_ProtoConsumer:
             )
             msmt.ts5_deserialized = time.time()
             consume_callback(msmt)
+          elif msg.topic() == topic_name_info:
+            self.log(f'Received INFO message: {msg.value().decode('utf-8')}')
           else:
             # Only happens if topics_to_consume has many topics
             self.log(f'Non-standard message received:')

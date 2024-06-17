@@ -9,7 +9,7 @@ from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.protobuf import ProtobufSerializer
 
 
-from ...helpers.proj_config import default_prod_sleep, topic_name_proto, max_msg_size
+from ...helpers.proj_config import default_prod_sleep, topic_name_proto, topic_name_info, max_msg_size
 from ...models.message import Dipl_JsonBatch, Dipl_ProtoBatch
 from ...models.measurement import Dipl_ProducerMeasurement
 
@@ -57,6 +57,12 @@ class Dipl_ProtoProducer:
 
     producer = Producer(self.config)
     self.log(f'Producing {len(self.produce_queue)} messages found in produce_queue...')
+
+    # Test messages help "warm up" the system
+    for i in range(5):
+      producer.produce(topic=topic_name_info, value=f'Test ping. Starting producer in {5 - i} seconds...')
+      producer.flush()
+      time.sleep(1.0)
 
     for idx in tqdm(range(len(self.produce_queue))):
       message_batch = self.produce_queue[idx]

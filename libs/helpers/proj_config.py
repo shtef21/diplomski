@@ -2,8 +2,10 @@
 import argparse
 
 
-topic_name_json = 'diplomski_json'
-topic_name_proto = 'diplomski_proto'
+topic_name_json = 'diplomski_json'    # JSON messages
+topic_name_proto = 'diplomski_proto'  # PROTO messages
+topic_name_info = 'dipomski_info'     # Info messages (not measured)
+
 consumer_group_json = 'json_group'
 consumer_group_proto = 'proto_group'
 max_msg_size = 10_000_000  # 10 MB
