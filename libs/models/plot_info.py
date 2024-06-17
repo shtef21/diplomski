@@ -1,7 +1,7 @@
 
 
 class Dipl_PlotInfo:
-  def __init__(self, user_count, value_amt, color):
-    self.user_str = str(user_count).replace('0000', '0K').replace('000', 'K')
-    self.val = value_amt
+  def __init__(self, x, value_amt, color):
+    self.x = x
+    self.y = value_amt
     self.color = color

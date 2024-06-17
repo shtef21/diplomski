@@ -2,6 +2,7 @@
 
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import time
 from pathlib import Path
@@ -70,6 +71,8 @@ def show_stats(csv_path: str):
     raise Exception(f'Cannot find CSV file: {csv_path}')
   
   df = pd.read_csv(csv_path)
+  df = df[df['user_count'] <= 10000]
+
   for col_idx, col_name in enumerate(processable_columns):
     # Fetch data from DF
     col_name_str = col_name.replace('_', ' ')
@@ -82,7 +85,7 @@ def show_stats(csv_path: str):
     msg_count = df['instance_count'].tolist()
 
     # Make plots
-    fig, axes = plt.subplots(2, 2, figsize=(14, 7))
+    fig, axes = plt.subplots(2, 2, figsize=(20, 7))
     fig.suptitle('JSON (blue) vs PROTO (red)')
     
     # Unpack plots and set grids
@@ -100,22 +103,40 @@ def show_stats(csv_path: str):
     ):
       plot.set_xlabel(f'Objects in message (n={msg_count[0]})')
       plot.set_ylabel(ylabel)
-      xticks = [1 + val_idx + val_idx * 0.2 for val_idx in range(len(value_arr))]
-      xticks_idx = [idx for idx in range(len(xticks))]
-      plot.xticks(xticks)
-      plot.xticks(xticks_idx, None)
-      # TODO: finish this
+
+      def calculate_x_tick(idx):
+        adjusted_idx = (idx - idx % 2) / 2
+        margin = 0.05
+        return round(margin + adjusted_idx + adjusted_idx * margin, 1)
+
+      xticks = [calculate_x_tick(val_idx) for val_idx in range(len(value_arr))]
+      xticks_labels = [
+        str(u_counts[val_idx]).replace('0000', '0K').replace('000', 'K')
+        for val_idx in range(len(value_arr))
+      ]
+      plot.set_xticks(xticks, xticks_labels)
 
       for json_idx in range(0, len(value_arr), 2):
         proto_idx = json_idx + 1
         plot_data = [
-          Dipl_PlotInfo(u_counts[json_idx], value_arr[json_idx], 'blue'),
-          Dipl_PlotInfo(u_counts[proto_idx], value_arr[proto_idx], 'red'),
+          Dipl_PlotInfo(xticks[json_idx], value_arr[json_idx], 'blue'),
+          Dipl_PlotInfo(xticks[proto_idx], value_arr[proto_idx], 'red'),
         ]
 
         for p_idx, p in enumerate(plot_data):
-          w = 0.5 if p_idx == 0 else -0.5
-          plot.bar(p.user_str, p.val, color=p.color, width=w, align='edge', clip_box=True)
+          w = 0.4 if p_idx == 0 else -0.4  # Align PROTO left and JSON right
+          bar = plot.bar(p.x, p.y, color=p.color, width=w, align='edge')[0]
+          height = bar.get_height()
+          label = f"{height:.1f}" if height < 5 else round(height)
+          plot.text(
+            bar.get_x() + bar.get_width() / 2,
+            height,
+            label,
+            ha='center',
+            va='bottom',
+            color=p.color,
+            fontweight='bold'
+          )
 
     # Set plots
     _set_plot(plt_1, col_mean, f'{col_name_str} ({col_unit[col_name]}) - MEAN')
@@ -128,8 +149,8 @@ def show_stats(csv_path: str):
     output_path = f'{output_dir}/{filename}_{col_name}.png'
     os.makedirs(output_dir, exist_ok=True)
 
-    # plt.savefig(output_path)
-    # print(f'Saved figure to {output_path}')
+    plt.savefig(output_path)
+    print(f'Saved figure to {output_path}')
 
     # Show example figure for first column
     if col_idx == 0:
