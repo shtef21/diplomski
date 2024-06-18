@@ -15,31 +15,42 @@ from .helpers import db
 
 # Columns to aggregate
 processable_columns = [
-  'consumed_size_kb',
+  'consumed_size_mb',
   'serialize_duration',
   'produce_duration',
   'consume_duration',
   'deserialize_duration',
-  'throughput_kbps'
+  'throughput_mbps',
+  'total_serialization_duration'
 ]
 col_unit = {
-  'consumed_size_kb': 'kB',
-  'serialize_duration': 'ms',
+  'consumed_size_mb': 'MB',
+  'serialize_duration': 'µs',
   'produce_duration': 'ms',
   'consume_duration': 'ms',
-  'deserialize_duration': 'ms',
-  'throughput_kbps': 'kbps'
+  'deserialize_duration': 'µs',
+  'throughput_mbps': 'mbps',
+  'total_serialization_duration': 'µs'
 }
 
 
 def process_measurements(db_path: str):
   time0 = time.time()
   msmt_list = db.get_measurements(db_path)
+
+  df = pd.DataFrame([msmt.__dict__ for msmt in msmt_list])
+
+  # Change measuring units
+  df['serialize_duration'] = df['serialize_duration'] * 1000       # Millisecond to microsecond
+  df['deserialize_duration'] = df['deserialize_duration'] * 1000   # Millisecond to microsecond
+
+  # Make new columns
+  df['consumed_size_mb'] = df['consumed_size_kb'] / 1024
+  df['total_serialization_duration'] = df['serialize_duration'] + df['deserialize_duration']
+  df['throughput_mbps'] = df['throughput_kbps'] / 1024
   
   # Group by 'user_count' and 'type'
-  grouped = pd.DataFrame([
-    msmt.__dict__ for msmt in msmt_list
-  ]).groupby(['user_count', 'type'])
+  grouped = df.groupby(['user_count', 'type'])
 
   # Define aggregation functions
   agg_funcs = {col: ['mean', 'sum', 'var', 'std'] for col in processable_columns}
@@ -85,7 +96,7 @@ def show_stats(csv_path: str):
     msg_count = df['instance_count'].tolist()
 
     # Make plots
-    fig, axes = plt.subplots(2, 2, figsize=(20, 7))
+    fig, axes = plt.subplots(2, 2, figsize=(25, 12))
     fig.suptitle('JSON (blue) vs PROTO (red)')
     
     # Unpack plots and set grids
@@ -127,7 +138,7 @@ def show_stats(csv_path: str):
           w = 0.4 if p_idx == 0 else -0.4  # Align PROTO left and JSON right
           bar = plot.bar(p.x, p.y, color=p.color, width=w, align='edge')[0]
           height = bar.get_height()
-          label = f"{height:.1f}" if height < 5 else round(height)
+          label = f"{height:.2f}" if height < 5 else round(height)
           plot.text(
             bar.get_x() + bar.get_width() / 2,
             height,
@@ -151,7 +162,3 @@ def show_stats(csv_path: str):
 
     plt.savefig(output_path)
     print(f'Saved figure to {output_path}')
-
-    # Show example figure for first column
-    if col_idx == 0:
-      plt.show()
