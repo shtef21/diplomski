@@ -35,12 +35,6 @@ def create_test_run(
       for reps in range(reps_per_test_case):
         yield Dipl_BatchClass(mock_generator, user_count)
 
-  # Publish 25000, 40000, 55000 users
-  elif type == 'extra_large':
-    for user_count in [25000, 40000, 55000]:
-      for reps in range(reps_per_test_case):
-        yield Dipl_BatchClass(mock_generator, user_count)
-
 
 def run_all_tests(
   j_prod: Dipl_JsonProducer,
@@ -74,7 +68,7 @@ def run_all_tests(
     n_produced += len(prod.produce_queue)
     prod.run(
       produce_callback=lambda msmt, err, msg: callback(prod, msmt, err, msg),
-      sleep_amount=0.25 if test_size != 'extra_large' else default_prod_sleep
+      sleep_amount=0.25
     )
 
   j_prod.log('Running a small test.')
@@ -91,11 +85,6 @@ def run_all_tests(
   run_test(j_prod, 'large', Dipl_JsonBatch)
   p_prod.log('Running a large test.')
   run_test(p_prod, 'large', Dipl_ProtoBatch)
-
-  j_prod.log('Running an extra large test.')
-  run_test(j_prod, 'extra_large', Dipl_JsonBatch)
-  p_prod.log('Running an extra large test.')
-  run_test(p_prod, 'extra_large', Dipl_ProtoBatch)
 
   wait_repetition = 5
   while wait_repetition > 0 and len(measurements) != n_produced:

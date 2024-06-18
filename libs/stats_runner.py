@@ -8,8 +8,8 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
+from .helpers.proj_config import csv_output_dir, graphs_output_dir
 from .models.plot_info import Dipl_PlotInfo
-from .models.stats import Dipl_StatsList, Dipl_StatsRow
 from .helpers import db
 
 
@@ -67,11 +67,10 @@ def process_measurements(db_path: str):
   print(agg_df)
 
   filename = Path(db_path).stem
-  output_dir = './csv_output'
-  output_path = f'{output_dir}/{filename}.csv'
-  os.makedirs(output_dir, exist_ok=True)
-  agg_df.to_csv(output_path)
+  output_path = f'{csv_output_dir}/{filename}.csv'
+  os.makedirs(csv_output_dir, exist_ok=True)
 
+  agg_df.to_csv(output_path)
   time_diff = time.time() - time0
   print(f'Data processed in {round(time_diff, 2)}s. Output: {output_path}')
 
@@ -88,7 +87,6 @@ def show_stats(csv_path: str):
     # Fetch data from DF
     col_name_str = col_name.replace('_', ' ')
     u_counts = df['user_count'].tolist()
-    types = df['type'].tolist()
     col_mean = df[f'{col_name}_mean'].tolist()
     col_sum = df[f'{col_name}_sum'].tolist()
     col_var = df[f'{col_name}_var'].tolist()
@@ -156,9 +154,8 @@ def show_stats(csv_path: str):
     _set_plot(plt_4, col_std, f'{col_name_str} - STD Dev.')
 
     filename = Path(csv_path).stem
-    output_dir = './output'
-    output_path = f'{output_dir}/{filename}_{col_name}.png'
-    os.makedirs(output_dir, exist_ok=True)
+    output_path = f'{graphs_output_dir}/{filename}_{col_name}.png'
+    os.makedirs(graphs_output_dir, exist_ok=True)
 
     plt.savefig(output_path)
     print(f'Saved figure to {output_path}')

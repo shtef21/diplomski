@@ -60,7 +60,9 @@ class Dipl_ProtoProducer:
 
     # Test messages help "warm up" the system
     for i in range(5):
-      producer.produce(topic=topic_name_info, value=f'Test ping. Starting producer in {5 - i} seconds...')
+      info_msg = f'Test ping. Starting producer in {5 - i} seconds...'
+      producer.produce(topic=topic_name_info, value=info_msg)
+      self.log(f'Produced "{info_msg}')
       producer.flush()
       time.sleep(1.0)
 

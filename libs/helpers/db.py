@@ -6,7 +6,6 @@ from typing import Any, Callable
 
 from .proj_config import default_db_path, db_tablename
 from ..models.measurement import Dipl_ConsumerMeasurement, Dipl_DbMeasurement, Dipl_ProducerMeasurement
-from ..models.stats import Dipl_StatsList
 
 
 def __operate_on_db(what_to_do: Callable[[sqlite3.Cursor], None], custom_db: str = None):
@@ -132,56 +131,3 @@ def get_measurements(custom_db_path: str = None) -> list[Dipl_DbMeasurement]:
     query_results = cursor.fetchall()
   __operate_on_db(_get_results, custom_db_path)
   return [Dipl_DbMeasurement(r) for r in query_results]
-
-
-def calculate_stats(custom_db_path: str = None) -> Dipl_StatsList:
-  query = f"""
-      SELECT
-        user_count,
-        type,
-        COUNT(*)
-          AS repetition_count,
-        AVG(serialize_duration)
-          AS serialize_duration_avg,
-        SUM(serialize_duration)
-          AS serialize_duration_sum,
-        AVG(produce_duration)
-          AS produce_duration_avg,
-        AVG(consume_duration)
-          AS consume_duration_avg,
-        AVG(deserialize_duration)
-          AS deserialize_duration_avg,
-        SUM(deserialize_duration)
-          AS deserialize_duration_sum,
-        AVG(produced_size_kb)
-          AS produced_size_kb_avg,
-        AVG(consumed_size_kb)
-          AS consumed_size_kb_avg,
-        AVG(throughput_kbps)
-          AS throughput_kbps_avg
-      FROM {db_tablename}
-      GROUP BY user_count, type
-      ORDER BY user_count, type;
-  """
-  query_results = []
-
-  def _get_results(cursor: sqlite3.Cursor):
-    nonlocal query_results
-    cursor.row_factory = sqlite3.Row  # This enables getting value by column name
-    cursor.execute(query)
-    query_results = cursor.fetchall()
-  __operate_on_db(_get_results, custom_db_path)
-
-  return Dipl_StatsList(query_results)
-
-
-def show_db_version():
-  result = None
-
-  def _show_version(cursor: sqlite3.Cursor):
-    nonlocal result
-    cursor.execute('select sqlite_version()')
-    result = cursor.fetchone()
-
-  print(f'> SQLite version is {result[0]}')
-  __operate_on_db(_show_version)

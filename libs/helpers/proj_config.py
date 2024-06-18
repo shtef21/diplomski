@@ -8,7 +8,7 @@ topic_name_info = 'dipomski_info'     # Info messages (not measured)
 
 consumer_group_json = 'json_group'
 consumer_group_proto = 'proto_group'
-max_msg_size = 10_000_000  # 10 MB
+max_msg_size = 2_000_000             # 2 MB
 
 default_bserver = 'localhost:9092'
 default_prod_sleep = 0.5
@@ -16,6 +16,10 @@ default_sr_url = 'http://localhost:8081'
 
 default_db_path = './sql.db'
 db_tablename = 'measurements'
+
+mocked_data_dir = './libs/data'
+csv_output_dir = './output/csv'
+graphs_output_dir = './output/graphs'
 
 
 

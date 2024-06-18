@@ -4,6 +4,7 @@ import random
 from datetime import datetime, timedelta
 from tqdm import tqdm
 
+from .proj_config import mocked_data_dir
 from .utils import save_json as dipl_save_json, read_json as dipl_read_json
 from ..models.mocked_user import Dipl_MockedUser
 
@@ -55,12 +56,11 @@ def get_mocks(**kwargs) -> list[Dipl_MockedUser]:
     - show_logs (bool)
   """
 
-  save_dir = './libs/mocks'
-  users_path = f'{save_dir}/users.json'
+  users_path = f'{mocked_data_dir}/users.json'
   user_mocks: list[Dipl_MockedUser] = []
 
-  if os.path.isdir(save_dir) == False:
-    os.mkdir(save_dir)
+  if os.path.isdir(mocked_data_dir) == False:
+    os.mkdir(mocked_data_dir)
 
   if kwargs.get('overwrite_prev', False) \
     or not os.path.exists(users_path):
