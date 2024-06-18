@@ -42,7 +42,7 @@ def run_all_tests(
   mock_generator: Dipl_MockGenerator,
   is_dry_run: bool,
 ):
-  reps = 100
+  reps = 200
   measurements: list[Dipl_ProducerMeasurement] = []
   n_produced = 0
 

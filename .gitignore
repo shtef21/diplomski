@@ -1,6 +1,5 @@
 protobuf_compiler
-libs/mocks/users.json
-libs/mocks/posts.json
+libs/data/users.json
 __pycache__
 private-notes.md
 sql_dumps
