@@ -20,9 +20,9 @@ def monitor_tests(cons: Dipl_JsonConsumer | Dipl_ProtoConsumer, dry_run: bool = 
 
   cons.run(consume_callback)
 
-  if not dry_run:
-    db.update_consumer_msmts(measurements)
-    cons.log(f'Inserted {len(measurements)} rows of {consumer_type} results.')
-  else:
-    cons.log(f'Dry run specified. Ignoring {len(measurements)} rows {consumer_type} results.')
-
+  if len(measurements) > 0:
+    if not dry_run:
+      db.update_consumer_msmts(measurements)
+      cons.log(f'Inserted {len(measurements)} rows of {consumer_type} results.')
+    else:
+      cons.log(f'Dry run specified. Ignoring {len(measurements)} rows {consumer_type} results.')

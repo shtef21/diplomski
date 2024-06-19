@@ -24,9 +24,8 @@ graphs_output_dir = './output/graphs'
 
 
 
-# Wrapper which enables linting
 class ArgReader():
-  """Wrapper used to help linter read CLI arguments"""
+  """Wrapper used to help linter see CLI arguments"""
 
   def __init__(self):
     # Initialize parser

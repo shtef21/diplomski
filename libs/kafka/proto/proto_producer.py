@@ -10,7 +10,7 @@ from confluent_kafka.schema_registry.protobuf import ProtobufSerializer
 
 
 from ...helpers.proj_config import default_prod_sleep, topic_name_proto, topic_name_info, max_msg_size
-from ...models.message import Dipl_JsonBatch, Dipl_ProtoBatch
+from ...models.message import Dipl_ProtoBatch
 from ...models.measurement import Dipl_ProducerMeasurement
 
 from .protoc_out import user_pb2
@@ -22,7 +22,6 @@ class Dipl_ProtoProducer:
     self.produce_queue: list[Dipl_ProtoBatch] = []
     self.config = {
       'bootstrap.servers': bootstrap_server,
-      # 10 MB is cca 60K spawn count
       'message.max.bytes': max_msg_size,
     }
     sr_client = SchemaRegistryClient({ 'url': schema_registry_url })
@@ -38,7 +37,6 @@ class Dipl_ProtoProducer:
       }
     )
     self.sr_context = SerializationContext(topic_name_proto, MessageField.VALUE)
-
   
   # log function
   def log(self, *args, **kwargs):
@@ -47,7 +45,6 @@ class Dipl_ProtoProducer:
       *args,
       **kwargs
     )
-
 
   def run(
     self,
@@ -58,7 +55,7 @@ class Dipl_ProtoProducer:
     producer = Producer(self.config)
     self.log(f'Producing {len(self.produce_queue)} messages found in produce_queue...')
 
-    # Test messages help "warm up" the system
+    # Notify consumers when producing is about to start
     for i in range(5):
       info_msg = f'Test ping. Starting producer in {5 - i} seconds...'
       producer.produce(topic=topic_name_info, value=info_msg)
@@ -84,7 +81,8 @@ class Dipl_ProtoProducer:
         callback = lambda err, msg: produce_callback(msmt, err, msg),
       )
 
-      producer.flush()  # produce it synchronously
+      # Synchronous producing
+      producer.flush()
       if sleep_amount:
         if sleep_amount > 0:
           time.sleep(sleep_amount)

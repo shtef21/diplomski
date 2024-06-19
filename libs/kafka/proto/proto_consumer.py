@@ -83,12 +83,14 @@ class Dipl_ProtoConsumer:
               msg.value(),
               SerializationContext(topic_name_proto, MessageField.VALUE)
             )
+            # self.log(f'Fetched {len(proto_msg.users)} users.')
+
             msmt.ts5_deserialized = time.time()
             consume_callback(msmt)
+
           elif msg.topic() == topic_name_info:
             self.log(f'Received INFO message: {msg.value().decode('utf-8')}')
           else:
-            # Only happens if topics_to_consume has many topics
             self.log(f'Non-standard message received:')
             self.log(msg.value())
 

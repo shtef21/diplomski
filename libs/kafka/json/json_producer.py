@@ -37,7 +37,7 @@ class Dipl_JsonProducer:
     producer = Producer(self.config)
     self.log(f'Producing {len(self.produce_queue)} messages found in produce_queue...')
 
-    # Test messages help "warm up" the system
+    # Notify consumers when producing is about to start
     for i in range(5):
       info_msg = f'Test ping. Starting producer in {5 - i} seconds...'
       producer.produce(topic=topic_name_info, value=info_msg)

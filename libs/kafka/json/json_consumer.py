@@ -18,7 +18,6 @@ class Dipl_JsonConsumer:
       'message.max.bytes': max_msg_size,
     }
 
-  
   # log function
   def log(self, *args, **kwargs):
     print(
@@ -26,7 +25,6 @@ class Dipl_JsonConsumer:
       *args,
       **kwargs
     )
-
 
   def run(self, consume_callback: Callable[[Dipl_ConsumerMeasurement], None]):
 
@@ -66,6 +64,8 @@ class Dipl_JsonConsumer:
             msmt.ts4_consumed = time.time()
 
             data = json_to_data(msg.value().decode('utf-8'))
+            # self.log(f'Fetched {len(data)} users.')
+
             msmt.ts5_deserialized = time.time()
             consume_callback(msmt)
           elif msg.topic() == topic_name_info:

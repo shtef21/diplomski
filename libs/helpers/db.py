@@ -1,8 +1,7 @@
 
 import os
 import sqlite3
-from statistics import variance
-from typing import Any, Callable
+from typing import Callable
 
 from .proj_config import default_db_path, db_tablename
 from ..models.measurement import Dipl_ConsumerMeasurement, Dipl_DbMeasurement, Dipl_ProducerMeasurement

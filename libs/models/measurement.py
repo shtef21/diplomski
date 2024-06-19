@@ -1,7 +1,4 @@
 
-import time
-
-
 class Dipl_DbMeasurement:
   """Measurement as shown in DB"""
 
@@ -52,10 +49,12 @@ class Dipl_ConsumerMeasurement():
     self.batch_id = batch_id
     
     # Set in consumer after fetching a message
+    self.consumed_size_kb = None
     self.ts3_created = None
     self.ts4_consumed = None
+
+    # Set in consumer after deserializing data
     self.ts5_deserialized = None
-    self.consumed_size_kb = None
 
   def __repr__(self):
     return self.__dict__.__repr__()

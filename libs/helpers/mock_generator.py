@@ -1,4 +1,3 @@
-from enum import Enum
 import os
 import random
 from datetime import datetime, timedelta
@@ -24,17 +23,6 @@ class Dipl_MockGenerator:
 
   def get_users(self, count) -> list[Dipl_MockedUser]:
     return [next(self.user_iterator) for _ in range(count)]
-  
-  def show_some_data(self):
-    print('Example user:')
-    print('\t', self.get_users(1)[0])
-    print('Getting 1 million users...', end='')
-    print(
-      ' Done fetching',
-      len(self.get_users(1_000_000)),
-      'posts.'
-    )
-
 
   # Internal generator function for users
   def __get_user_iterator(self, users):
@@ -117,4 +105,3 @@ def generate_mock_data():
     user_mocks.append(social_media_user_mock)
 
   return user_mocks
-

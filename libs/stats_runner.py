@@ -2,11 +2,9 @@
 
 import os
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import time
 from pathlib import Path
-from typing import Any, Callable
 
 from .helpers.proj_config import csv_output_dir, graphs_output_dir
 from .models.plot_info import Dipl_PlotInfo
@@ -40,9 +38,9 @@ def process_measurements(db_path: str):
 
   df = pd.DataFrame([msmt.__dict__ for msmt in msmt_list])
 
-  # Change measuring units
-  df['serialize_duration'] = df['serialize_duration'] * 1000       # Millisecond to microsecond
-  df['deserialize_duration'] = df['deserialize_duration'] * 1000   # Millisecond to microsecond
+  # Change measuring units (ms to µs)
+  df['serialize_duration'] = df['serialize_duration'] * 1000
+  df['deserialize_duration'] = df['deserialize_duration'] * 1000
 
   # Make new columns
   df['consumed_size_mb'] = df['consumed_size_kb'] / 1024
@@ -133,19 +131,17 @@ def show_stats(csv_path: str):
         ]
 
         for p_idx, p in enumerate(plot_data):
-          w = 0.4 if p_idx == 0 else -0.4  # Align PROTO left and JSON right
-          bar = plot.bar(p.x, p.y, color=p.color, width=w, align='edge')[0]
+          # Plot a bar
+          # Align PROTO left and JSON right
+          bar_align = 0.4 if p_idx == 0 else -0.4
+          bar = plot.bar(p.x, p.y, color=p.color, width=bar_align, align='edge')[0]
+
+          # Show amount above bar
+          bar_center = bar.get_x() + bar.get_width() / 2
           height = bar.get_height()
-          label = f"{height:.2f}" if height < 5 else round(height)
-          plot.text(
-            bar.get_x() + bar.get_width() / 2,
-            height,
-            label,
-            ha='center',
-            va='bottom',
-            color=p.color,
-            fontweight='bold'
-          )
+          bar_label = f"{height:.2f}" if height < 5 else round(height)
+          font_style = { 'ha': 'center', 'va': 'bottom', 'color': p.color, 'fontweight': 'bold' }
+          plot.text(x=bar_center, y=height, s=bar_label, **font_style)
 
     # Set plots
     _set_plot(plt_1, col_mean, f'{col_name_str} ({col_unit[col_name]}) - MEAN')

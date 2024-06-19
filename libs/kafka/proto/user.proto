@@ -1,25 +1,15 @@
-// To compile this file, run this inside the file's directory:
+// To compile this file, run this inside the file's directory (using protobuf compiler):
 //   protoc --python_out=./protoc_out user.proto
 
 /*
     Python proto buffer compiler doesn't generate data access code directly.
+    For that reason, wrappers inside user_pb2_wrapper.py are used
 */
 
 syntax = "proto2";
 
 package diplomski;
 
-/*
-{
-    "id": 1,
-    "username": "user_1",
-    "email": "user_1@example.com",
-    "joined": "2024-05-13",
-    "sex": false,
-    "location": "Location_35",
-    "birthday": "1998-01-19"
-}
-*/
 message User {
     required int32 id = 1;
     required string username = 2;
@@ -39,5 +29,3 @@ message User {
 message UserList {
     repeated User users = 1;
 }
-
-// TODO: Finish this

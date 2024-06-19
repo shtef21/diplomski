@@ -1,14 +1,13 @@
 # Install required libraries:
 #   pip install confluent-kafka protobuf requests colorama tqdm matplotlib pandas
 
-import time
 import os
 from pprint import pprint
 
 from libs.kafka.json.json_producer import Dipl_JsonProducer
 from libs.kafka.json.json_consumer import Dipl_JsonConsumer
 from libs.helpers.mock_generator import Dipl_MockGenerator
-from libs.helpers.proj_config import ArgReader, db_tablename, default_db_path
+from libs.helpers.proj_config import ArgReader, default_db_path
 from libs.kafka.proto.proto_consumer import Dipl_ProtoConsumer
 from libs.kafka.proto.proto_producer import Dipl_ProtoProducer
 from libs.helpers import db
@@ -74,5 +73,3 @@ if ARGS.process_stats:
 # Show stats
 if ARGS.show_stats:
   show_stats(ARGS.csv_path)
-
-# TODO: Use 'seaborn' for visualizing data (not matplotlib)?

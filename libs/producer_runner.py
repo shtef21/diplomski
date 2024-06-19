@@ -3,7 +3,6 @@ import time
 
 from .helpers import db
 from .helpers.mock_generator import Dipl_MockGenerator
-from .helpers.proj_config import default_prod_sleep
 from .models.message import Dipl_JsonBatch, Dipl_ProtoBatch
 from .models.measurement import Dipl_ProducerMeasurement
 from .kafka.json.json_producer import Dipl_JsonProducer
