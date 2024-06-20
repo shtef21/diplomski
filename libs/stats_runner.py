@@ -6,20 +6,20 @@ import pandas as pd
 import time
 from pathlib import Path
 
-from .helpers.proj_config import csv_output_dir, graphs_output_dir
+from .helpers.proj_config import csv_output_dir, graphs_dir
 from .models.plot_info import Dipl_PlotInfo
 from .helpers import db
 
 
 # Columns to aggregate
 processable_columns = [
-  'consumed_size_mb',
   'serialize_duration',
   'produce_duration',
   'consume_duration',
+  'consumed_size_mb',
   'deserialize_duration',
+  'total_serialization_duration',
   'throughput_mbps',
-  'total_serialization_duration'
 ]
 col_unit = {
   'consumed_size_mb': 'MB',
@@ -149,9 +149,10 @@ def show_stats(csv_path: str):
     _set_plot(plt_3, col_var, f'{col_name_str} ({col_unit[col_name]}) - VARIANCE')
     _set_plot(plt_4, col_std, f'{col_name_str} - STD Dev.')
 
-    filename = Path(csv_path).stem
-    output_path = f'{graphs_output_dir}/{filename}_{col_name}.png'
-    os.makedirs(graphs_output_dir, exist_ok=True)
+    graphs_dump_subdir = Path(csv_path).stem
+    out_dir = f'{graphs_dir}/{graphs_dump_subdir}'
+    os.makedirs(out_dir, exist_ok=True)
 
+    output_path = f'{out_dir}/{col_idx + 1}-{col_name}.png'
     plt.savefig(output_path)
     print(f'Saved figure to {output_path}')

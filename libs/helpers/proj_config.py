@@ -19,7 +19,7 @@ db_tablename = 'measurements'
 
 mocked_data_dir = './libs/data'
 csv_output_dir = './output/csv'
-graphs_output_dir = './output/graphs'
+graphs_dir = './output/graphs'
 
 
 
