@@ -146,8 +146,8 @@ def show_stats(csv_path: str):
     # Set plots
     _set_plot(plt_1, col_mean, f'{col_name_str} ({col_unit[col_name]}) - MEAN')
     _set_plot(plt_2, col_sum, f'{col_name_str} ({col_unit[col_name]}) - SUM')
-    _set_plot(plt_3, col_var, f'{col_name_str} ({col_unit[col_name]}) - VARIANCE')
-    _set_plot(plt_4, col_std, f'{col_name_str} - STD Dev.')
+    _set_plot(plt_3, col_var, f'{col_name_str} ({col_unit[col_name]} ^2) - VARIANCE')
+    _set_plot(plt_4, col_std, f'{col_name_str} ({col_unit[col_name]}) - STD Dev.')
 
     graphs_dump_subdir = Path(csv_path).stem
     out_dir = f'{graphs_dir}/{graphs_dump_subdir}'
