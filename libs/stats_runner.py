@@ -16,19 +16,21 @@ processable_columns = [
   'serialize_duration',
   'produce_duration',
   'consume_duration',
-  'consumed_size_mb',
+  'consumed_size_kb',
+  # 'consumed_size_mb',
   'deserialize_duration',
   'total_serialization_duration',
   'throughput_mbps',
 ]
 col_unit = {
-  'consumed_size_mb': 'MB',
-  'serialize_duration': 'µs',
+  'serialize_duration': 'ms',
   'produce_duration': 'ms',
   'consume_duration': 'ms',
-  'deserialize_duration': 'µs',
+  'consumed_size_kb': 'KB',
+  'consumed_size_mb': 'MB',
+  'deserialize_duration': 'ms',
+  'total_serialization_duration': 'ms',
   'throughput_mbps': 'mbps',
-  'total_serialization_duration': 'µs'
 }
 
 
@@ -38,8 +40,10 @@ def process_measurements(db_path: str):
 
   df = pd.DataFrame([msmt.__dict__ for msmt in msmt_list])
 
-  # Change measuring units (ms to µs)
+  # Change measuring units (s to ms)
   df['serialize_duration'] = df['serialize_duration'] * 1000
+  df['produce_duration'] = df['produce_duration'] * 1000
+  df['consume_duration'] = df['consume_duration'] * 1000
   df['deserialize_duration'] = df['deserialize_duration'] * 1000
 
   # Make new columns
