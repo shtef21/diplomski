@@ -69,7 +69,7 @@ class Dipl_ProtoBatch(Dipl_Batch):
       user.username = mocked_user.username
       user.email = mocked_user.email
       user.joined = mocked_user.joined
-      user.gender = user_pb2.User.MALE if mocked_user.gender == DIPL_GENDER_MALE else DIPL_GENDER_FEMALE
+      user.gender = user_pb2.User.MALE if mocked_user.gender == DIPL_GENDER_MALE else user_pb2.User.FEMALE
       user.location = mocked_user.location
       user.birthday = mocked_user.birth_date
     
