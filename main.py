@@ -65,11 +65,10 @@ elif ARGS.is_proto_consumer:
   consumer = Dipl_ProtoConsumer(ARGS.bootstrap_server)
   monitor_tests(consumer, ARGS.is_dry_run)
 
-
 # Make calculations on stats
-if ARGS.process_stats:
+elif ARGS.process_stats:
   process_measurements(ARGS.db_path)
 
 # Show stats
-if ARGS.show_stats:
+elif ARGS.show_stats:
   show_stats(ARGS.csv_path)

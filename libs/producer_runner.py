@@ -31,7 +31,7 @@ def create_test_run(
   # Publish 2500, 5000, 7500, 10000 users
   elif type == 'large':
     for user_count in [2500, 5000, 7500, 10000]:
-      for reps in range(reps_per_test_case):
+      for reps in range(min(10, reps_per_test_case)):
         yield Dipl_BatchClass(mock_generator, user_count)
 
 
