@@ -69,7 +69,7 @@ class Dipl_JsonConsumer:
             msmt.ts5_deserialized = time.time()
             consume_callback(msmt)
           elif msg.topic() == topic_name_info:
-            self.log(f'Received INFO message: {msg.value().decode('utf-8')}')
+            self.log(f'Received INFO message: {msg.value().decode("utf-8")}')
           else:
             # Only happens if topics_to_consume has many topics
             self.log(f'Non-standard message received:')

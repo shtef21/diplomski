@@ -89,7 +89,7 @@ class Dipl_ProtoConsumer:
             consume_callback(msmt)
 
           elif msg.topic() == topic_name_info:
-            self.log(f'Received INFO message: {msg.value().decode('utf-8')}')
+            self.log(f'Received INFO message: {msg.value().decode("utf-8")}')
           else:
             self.log(f'Non-standard message received:')
             self.log(msg.value())
