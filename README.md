@@ -21,7 +21,7 @@ Comparison of transmission speed of **Protobuf** and **JSON** messages in an **A
 
 **Questions (2023-11-10):**
 - How to improve communication in a Kafka producer-consumer communication?
-- Is it possible to used a better method than JSON? Protocol Buffers?
+- Is it possible to use a better method than JSON? Protocol Buffers?
 
 **Protocol Buffers:**
 - Contain object structure
@@ -87,7 +87,7 @@ python main.py --proto-consumer --dry-run
 
 To do proper measurements, first the consumers must be started.
 If producers were to be started first, then there would be
-delays in measurements which make them incorrect.
+delays in measurements which would make them incorrect.
 
 Run consumers in **two CLIs simultaneously**:
 ```sh
