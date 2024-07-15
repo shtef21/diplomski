@@ -6,6 +6,13 @@ Comparison of transmission speed of **Protobuf** and **JSON** messages in an **A
 
 
 
+## Presentation 15.7.2024.
+
+The thesis was presented to a Croatian audience on 15th of July, 2024.
+
+Presentation can be found on the following link: [Canva](https://www.canva.com/design/DAGKYa7UMHo/_5Kem8UhZMNCOViQYQTF9w/view?utm_content=DAGKYa7UMHo&utm_campaign=designshare&utm_medium=link&utm_source=editor).
+
+
 
 ## Docs
 
