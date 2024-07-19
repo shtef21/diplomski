@@ -70,6 +70,13 @@ class ArgReader():
     )
 
     arg_required_group = arg_parser.add_mutually_exclusive_group(required=True)
+    # initialize_project
+    arg_required_group.add_argument(
+      '--initialize-project',
+      dest='initialize_project',
+      action='store_true',
+      help='Initialize topics on Docker containers after first creation'
+    )
     # is_produce
     arg_required_group.add_argument(
       '--run-producers',
@@ -132,6 +139,7 @@ class ArgReader():
     self.csv_path = a.csv_path
     self.schema_registry_url = a.schema_registry_url
     self.is_dry_run = a.is_dry_run
+    self.initialize_project = a.initialize_project
     self.is_produce = a.is_produce
     self.is_json_consumer = a.is_json_consumer
     self.is_proto_consumer = a.is_proto_consumer
