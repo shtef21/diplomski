@@ -44,8 +44,26 @@ if ARGS.is_produce and not input(db_prompt).lower().startswith('n'):
     exit()
 
 
+# Initialize topics on Docker containers
+if ARGS.initialize_project:
+  # Initialize JSON topic
+  print('Initializing JSON topic. Press ^C on JSON consumer after it consumes 1 message.')
+  j_producer = Dipl_JsonProducer(ARGS.bootstrap_server)
+  j_producer.produce_queue = [Dipl_JsonBatch(mock_generator, 1)]
+  j_producer.run(lambda msmt, err, msg: None)
+  j_consumer = Dipl_JsonConsumer(ARGS.bootstrap_server)
+  j_consumer.run(lambda msmt: None)
+  
+  # Initialize PROTO topic
+  print('Initializing Proto topic. Press ^C on Proto consumer after it consumes 1 message.')
+  p_producer = Dipl_ProtoProducer(ARGS.bootstrap_server, ARGS.schema_registry_url)
+  p_producer.produce_queue = [Dipl_ProtoBatch(mock_generator, 1)]
+  p_producer.run(lambda msmt, err, msg: None)
+  p_consumer = Dipl_ProtoConsumer(ARGS.bootstrap_server)
+  p_consumer.run(lambda msmt: None)
+
 # Start JSON producer
-if ARGS.is_produce:
+elif ARGS.is_produce:
   j_producer = Dipl_JsonProducer(ARGS.bootstrap_server)
   p_producer = Dipl_ProtoProducer(ARGS.bootstrap_server, ARGS.schema_registry_url)
   run_all_tests(
